@@ -180,8 +180,6 @@ namespace GitHubExtractor.Services.Connection
 			}
 		}
 
-
-
 		public Tuple<T, string> AccessEndPoint<T>(string path, object request, bool isPost, BasicAuth auth, string requestOrigin)
 		{
 			string rawResponse = AccessEndPoint(path, request, isPost, auth, requestOrigin);
