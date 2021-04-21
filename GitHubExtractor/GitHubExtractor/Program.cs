@@ -1,4 +1,5 @@
-﻿using GitHubExtractor.Services;
+﻿using GitHubExtractor.Dtos;
+using GitHubExtractor.Services;
 using GitHubExtractor.Services.Connection;
 using NLog;
 using System;
@@ -8,7 +9,9 @@ namespace GitHubExtractor
 {
 	class Program
 	{
-		public static Logger LOG = LogManager.GetCurrentClassLogger();
+		public static readonly Logger LOG = LogManager.GetCurrentClassLogger();
+
+		protected Program() { }
 
 		static void Main(string[] args)
 		{
@@ -23,10 +26,15 @@ namespace GitHubExtractor
 
 				BasicAuth basicAuth = new BasicAuth(gitRequestUser, gitRequestToken);
 
+				GitHubRequestDto gitHubRequestDto = new GitHubRequestDto(gitRepoUserName, gitProject, basicAuth);
+
 				string connectionKey = "basePathGitHubApi";
 				GitHubApiConnectionService gitHubApiConnectionService = new GitHubApiConnectionService(connectionKey);
-				GitHubPullRequestService gitHubPullRequestService = new GitHubPullRequestService(gitRepoUserName, gitProject, basicAuth, gitHubApiConnectionService);
-				GitHubService gitHubService = new GitHubService(gitHubPullRequestService);
+
+				GitHubPullRequestService gitHubPullRequestService = new GitHubPullRequestService(gitHubRequestDto, gitHubApiConnectionService);
+				GitHubIssuesRequestService gitHubIssuesRequestService = new GitHubIssuesRequestService(gitHubRequestDto, gitHubApiConnectionService);
+
+				GitHubService gitHubService = new GitHubService(gitHubPullRequestService, gitHubIssuesRequestService);
 
 				gitHubService.CreatePullRequestCSVFile();
 			}

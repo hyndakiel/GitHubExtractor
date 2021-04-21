@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using GitHubExtractor.Models;
+using System.Collections.Generic;
 
 namespace GitHubExtractor.Services.Interfaces
 {
 	public interface IGitHubPullRequestService
 	{
-		public IEnumerable<object> List();
+		public IEnumerable<PullRequestResponse> List();
 	}
 }
