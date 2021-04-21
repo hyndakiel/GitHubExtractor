@@ -1,40 +1,30 @@
-﻿using GitHubExtractor.Services.Connection;
+﻿using GitHubExtractor.Dtos;
+using GitHubExtractor.Models;
+using GitHubExtractor.Services.Connection;
 using GitHubExtractor.Services.Interfaces;
+using GitHubExtractor.Utils;
 using System.Collections.Generic;
 
 namespace GitHubExtractor.Services
 {
-	public class GitHubPullRequestService : IGitHubPullRequestService
+	public class GitHubPullRequestService : AbstractGitHubRequestService, IGitHubPullRequestService
 	{
-		public string GitUserName { get; set; }
-		public string GitProject { get; set; }
-		public GitHubApiConnectionService GitHubApiConnectionService { get; set; }
-		public BasicAuth BasicAuth { get; private set; }
-
-		public GitHubPullRequestService(string gitUserName, string gitProject, GitHubApiConnectionService gitHubApiConnectionService)
+		public GitHubPullRequestService(GitHubRequestDto gitHubRequestDto, GitHubApiConnectionService gitHubApiConnectionService) : base(gitHubRequestDto, gitHubApiConnectionService)
 		{
-			GitUserName = gitUserName;
-			GitProject = gitProject;
-			GitHubApiConnectionService = gitHubApiConnectionService;
-			BasicAuth = CreateBasicAuth();
 		}
 
-		public IEnumerable<object> List()
+		public IEnumerable<PullRequestResponse> List()
 		{
-			string url = string.Format("/repos/{0}/{1}/pulls", GitUserName, GitProject);
+			string url = string.Format("/repos/{0}/{1}/pulls", GitRepoUserName, GitProject);
 
 			BasicAuth basicAuth = BasicAuth;
-
 
 			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
 			string response = gitHubApiConnectionService.AccessEndPoint(url, null, false, basicAuth, "GitHub");
 
-			return new List<object>();
-		}
+			List<PullRequestResponse> pullRequests = UtilitiesObj.JsonDeserializeObject<List<PullRequestResponse>>(response);
 
-		private BasicAuth CreateBasicAuth()
-		{
-			return new BasicAuth("hyndakiel", "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");
+			return pullRequests;
 		}
 	}
 }

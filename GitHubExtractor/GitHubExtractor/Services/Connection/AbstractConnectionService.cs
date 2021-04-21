@@ -13,7 +13,10 @@ namespace GitHubExtractor.Services.Connection
 	{
 		public static readonly Logger LOG = LogManager.GetCurrentClassLogger();
 
-		public const int DEFAULT_TIMEOUT = 15 * 60;
+		/// <summary>
+		/// Timeout in miliseconds
+		/// </summary>
+		public const int DEFAULT_TIMEOUT = 15 * 60 * 1000;
 
 		public string ApiUrl { get; set; }
 
