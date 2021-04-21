@@ -16,12 +16,16 @@ namespace GitHubExtractor
 			LOG.Info("INIT");
 			try
 			{
-				string gitUserName = args[0];
+				string gitRepoUserName = args[0];
 				string gitProject = args[1];
+				string gitRequestUser = args[2];
+				string gitRequestToken = args[3];
+
+				BasicAuth basicAuth = new BasicAuth(gitRequestUser, gitRequestToken);
 
 				string connectionKey = "basePathGitHubApi";
 				GitHubApiConnectionService gitHubApiConnectionService = new GitHubApiConnectionService(connectionKey);
-				GitHubPullRequestService gitHubPullRequestService = new GitHubPullRequestService(gitUserName, gitProject, gitHubApiConnectionService);
+				GitHubPullRequestService gitHubPullRequestService = new GitHubPullRequestService(gitRepoUserName, gitProject, basicAuth, gitHubApiConnectionService);
 				GitHubService gitHubService = new GitHubService(gitHubPullRequestService);
 
 				gitHubService.CreatePullRequestCSVFile();

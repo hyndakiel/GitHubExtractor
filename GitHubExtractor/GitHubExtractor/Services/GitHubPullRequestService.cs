@@ -1,5 +1,6 @@
 ﻿using GitHubExtractor.Services.Connection;
 using GitHubExtractor.Services.Interfaces;
+using GitHubExtractor.Utils;
 using System.Collections.Generic;
 
 namespace GitHubExtractor.Services
@@ -8,15 +9,16 @@ namespace GitHubExtractor.Services
 	{
 		public string GitUserName { get; set; }
 		public string GitProject { get; set; }
+		public string GitToken { get; set; }
 		public GitHubApiConnectionService GitHubApiConnectionService { get; set; }
 		public BasicAuth BasicAuth { get; private set; }
 
-		public GitHubPullRequestService(string gitUserName, string gitProject, GitHubApiConnectionService gitHubApiConnectionService)
+		public GitHubPullRequestService(string gitUserName, string gitProject, BasicAuth basicAuth, GitHubApiConnectionService gitHubApiConnectionService)
 		{
 			GitUserName = gitUserName;
 			GitProject = gitProject;
 			GitHubApiConnectionService = gitHubApiConnectionService;
-			BasicAuth = CreateBasicAuth();
+			BasicAuth = basicAuth;
 		}
 
 		public IEnumerable<object> List()
@@ -29,12 +31,9 @@ namespace GitHubExtractor.Services
 			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
 			string response = gitHubApiConnectionService.AccessEndPoint(url, null, false, basicAuth, "GitHub");
 
-			return new List<object>();
-		}
+			List<dynamic> pullRequests = UtilitiesObj.JsonDeserializeObject<List<dynamic>>(response);
 
-		private BasicAuth CreateBasicAuth()
-		{
-			return new BasicAuth("hyndakiel", "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");
+			return pullRequests;
 		}
 	}
 }
