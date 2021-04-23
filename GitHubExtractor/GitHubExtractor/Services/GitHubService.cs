@@ -26,10 +26,6 @@ namespace GitHubExtractor.Services
 
 		private readonly string DELIMETER = "\a";
 
-		private readonly IEnumerable<string> HEADERS = new List<string>()
-		{
-			"PR_Number", "Issue_Closed_Date", "Issue_Author", "Issue_Title", "Issue_Body", "Issue_Comments", "PR_Closed_Date", "PR_Author", "PR_Title", "PR_Body", "PR_Comments", "Commit_Author", "Commit_Date", "Commit_Message", "isPR",
-		};
 		private readonly string FILE_PATH_KEY = "PullRequestFilePathKey";
 
 		public GitHubService(IGitHubPullRequestService gitHubPullRequestService, IGitHubIssuesRequestService gitHubissuesRequestService, IGitHubCommitRequestService gitHubCommitRequestService)//, IFileCreator fileCreator)
@@ -148,7 +144,6 @@ namespace GitHubExtractor.Services
 
 			CsvWriter csvWriter = new CsvWriter(writer, configuration);
 			csvWriter.Context.RegisterClassMap<TClassMap>();
-			SetupHeader(csvWriter);
 			SetupData(csvWriter, data);
 
 			LOG.Info("INIT - SAVING CSV TO PATH: {0} WITH NAME {1}", filePath, fileName);
@@ -167,15 +162,6 @@ namespace GitHubExtractor.Services
 			AppConfig appConfig = AppConfig.Instance;
 			string filePath = appConfig.GetConfig(FILE_PATH_KEY);
 			return filePath;
-		}
-
-		private void SetupHeader(CsvWriter csvWriter)
-		{
-			foreach (string header in HEADERS)
-			{
-				csvWriter.WriteField(header);
-			}
-			csvWriter.NextRecord();
 		}
 
 		private void SetupData<T>(CsvWriter csvWriter, IEnumerable<T> data)
