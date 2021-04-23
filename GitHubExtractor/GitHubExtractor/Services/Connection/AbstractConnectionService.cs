@@ -32,6 +32,13 @@ namespace GitHubExtractor.Services.Connection
 			return this.AccessEndPoint(url, null);
 		}
 
+		public Tuple<T, string> AccessEndPoint<T>(string path, object request, bool isPost, BasicAuth auth, string requestOrigin)
+		{
+			string rawResponse = AccessEndPoint(path, request, isPost, auth, requestOrigin);
+			T responseObj = UtilitiesObj.JsonDeserializeObject<T>(rawResponse);
+			return new Tuple<T, string>(responseObj, rawResponse);
+		}//func
+
 		public virtual string AccessEndPoint(string baseUrl, string json, params Tuple<string, string>[] headers)
 		{
 			string apiUrl = this.ApiUrl;
@@ -182,12 +189,5 @@ namespace GitHubExtractor.Services.Connection
 				throw new IOException(msg, e);
 			}
 		}
-
-		public Tuple<T, string> AccessEndPoint<T>(string path, object request, bool isPost, BasicAuth auth, string requestOrigin)
-		{
-			string rawResponse = AccessEndPoint(path, request, isPost, auth, requestOrigin);
-			T responseObj = UtilitiesObj.JsonDeserializeObject<T>(rawResponse);
-			return new Tuple<T, string>(responseObj, rawResponse);
-		}//func
 	}
 }

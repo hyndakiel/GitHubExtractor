@@ -5,6 +5,7 @@ namespace GitHubExtractor.Models
 {
 	public class PullRequestResponse
 	{
+
 		[JsonProperty("url")]
 		public string Url { get; set; }
 
@@ -12,7 +13,7 @@ namespace GitHubExtractor.Models
 		public string Id { get; set; }
 
 		[JsonProperty("closed_at")]
-		public DateTime? CloseTime { get; set; }
+		public DateTime? CloseDate { get; set; }
 
 		[JsonProperty("issue_url")]
 		public string IssueUrl { get; set; }
