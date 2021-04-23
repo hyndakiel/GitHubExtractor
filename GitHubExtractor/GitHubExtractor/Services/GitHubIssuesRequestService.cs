@@ -3,6 +3,7 @@ using GitHubExtractor.Models;
 using GitHubExtractor.Services.Connection;
 using GitHubExtractor.Services.Interfaces;
 using GitHubExtractor.Utils;
+using System.Collections.Generic;
 
 namespace GitHubExtractor.Services
 {
@@ -12,11 +13,9 @@ namespace GitHubExtractor.Services
 		{
 		}
 
-		public IssueResponse Get(string url)
+		public IssueResponse Get(int number)
 		{
-			string issueNumberAsString = GetIssueNumberFromUrl(url);
-
-			string urlToUse = string.Format("/repos/{0}/{1}/issues/{2}", GitRepoUserName, GitProject, issueNumberAsString);
+			string urlToUse = string.Format("/repos/{0}/{1}/issues/{2}", GitRepoUserName, GitProject, number);
 
 			BasicAuth basicAuth = BasicAuth;
 
@@ -28,15 +27,18 @@ namespace GitHubExtractor.Services
 			return issue;
 		}
 
-		private string GetIssueNumberFromUrl(string url)
+		public IEnumerable<IssueCommentResponse> GetIssueComments(int issueNumber)
 		{
-			int indexOfIssuesKeyWord = url.IndexOf("issues");
-			string afterIssuesKeyword = url.Substring(indexOfIssuesKeyWord);
+			string urlToUse = string.Format("/repos/{0}/{1}/issues/{2}/comments", GitRepoUserName, GitProject, issueNumber);
 
-			int actionDividerIndex = url.IndexOf("/");
-			string issueNumberAsString = afterIssuesKeyword.Substring(actionDividerIndex + 1);
+			BasicAuth basicAuth = BasicAuth;
 
-			return issueNumberAsString;
+			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
+			string response = gitHubApiConnectionService.AccessEndPoint(urlToUse, null, false, basicAuth, "GitHub");
+
+			IEnumerable<IssueCommentResponse> issueComments = UtilitiesObj.JsonDeserializeObject<IEnumerable<IssueCommentResponse>>(response);
+
+			return issueComments;
 		}
 	}
 }

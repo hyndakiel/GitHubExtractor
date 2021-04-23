@@ -17,5 +17,22 @@ namespace GitHubExtractor.Services
 			BasicAuth = gitHubRequestDto.BasicAuth;
 			GitHubApiConnectionService = gitHubApiConnectionService;
 		}
+
+		protected string GetNumberAfterStringFromUrl(string url, string stringToFind, bool isMiddleOfString = false)
+		{
+			int indexOfIssuesKeyWord = url.IndexOf(stringToFind);
+			string afterIssuesKeyword = url.Substring(indexOfIssuesKeyWord);
+
+			int actionDividerIndex = afterIssuesKeyword.IndexOf("/");
+			string dataAsString = afterIssuesKeyword.Substring(actionDividerIndex + 1);
+
+			if (isMiddleOfString)
+			{
+				int actionDividerIndexEnd = dataAsString.IndexOf("/");
+				dataAsString = dataAsString.Substring(0, actionDividerIndexEnd);
+			}
+
+			return dataAsString;
+		}
 	}
 }

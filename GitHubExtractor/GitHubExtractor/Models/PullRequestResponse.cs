@@ -27,8 +27,19 @@ namespace GitHubExtractor.Models
 		[JsonProperty("comments_url")]
 		public string CommentsUrl { get; set; }
 
+		[JsonProperty("review_comments_url")]
+		public string PullRequestComments { get; set; }
+
 		[JsonProperty("commits_url")]
 		public string CommitsUrl { get; set; }
 
+		[JsonProperty("number")]
+		public int Number { get; set; }
+
+		[JsonProperty("user")]
+		public Creator User { get; set; }
+
+		[JsonProperty("head")]
+		public Head Head { get; internal set; }
 	}
 }

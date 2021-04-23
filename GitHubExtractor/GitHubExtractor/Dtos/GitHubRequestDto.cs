@@ -1,4 +1,5 @@
-﻿using GitHubExtractor.Services.Connection;
+﻿using GitHubExtractor.Configs;
+using GitHubExtractor.Services.Connection;
 
 namespace GitHubExtractor.Dtos
 {
@@ -8,10 +9,11 @@ namespace GitHubExtractor.Dtos
 		public string GitProject { get; }
 		public BasicAuth BasicAuth { get; }
 
-		public GitHubRequestDto(string gitRepoUserName, string gitProject, BasicAuth basicAuth)
+		public GitHubRequestDto(BasicAuth basicAuth)
 		{
-			GitRepoUserName = gitRepoUserName;
-			GitProject = gitProject;
+			AppConfig instance = AppConfig.Instance;
+			GitRepoUserName = instance.GetConfig("RepoOwner");
+			GitProject = instance.GetConfig("RepoName");
 			BasicAuth = basicAuth;
 		}
 	}

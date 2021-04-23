@@ -21,5 +21,9 @@ namespace GitHubExtractor.Models
 
 		[JsonProperty("milestone")]
 		public Milestone Milestone { get; set; }
+
+
+		[JsonProperty("number")]
+		public int Number { get; set; }
 	}
 }

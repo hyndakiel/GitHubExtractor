@@ -19,22 +19,21 @@ namespace GitHubExtractor
 			LOG.Info("INIT");
 			try
 			{
-				string gitRepoUserName = args[0];
-				string gitProject = args[1];
-				string gitRequestUser = args[2];
-				string gitRequestToken = args[3];
+				string gitRequestUser = args[0];
+				string gitRequestToken = args[1];
 
 				BasicAuth basicAuth = new BasicAuth(gitRequestUser, gitRequestToken);
 
-				GitHubRequestDto gitHubRequestDto = new GitHubRequestDto(gitRepoUserName, gitProject, basicAuth);
+				GitHubRequestDto gitHubRequestDto = new GitHubRequestDto(basicAuth);
 
 				string connectionKey = "basePathGitHubApi";
 				GitHubApiConnectionService gitHubApiConnectionService = new GitHubApiConnectionService(connectionKey);
 
 				GitHubPullRequestService gitHubPullRequestService = new GitHubPullRequestService(gitHubRequestDto, gitHubApiConnectionService);
 				GitHubIssuesRequestService gitHubIssuesRequestService = new GitHubIssuesRequestService(gitHubRequestDto, gitHubApiConnectionService);
+				GitHubCommitRequestService gitHubCommitRequestService = new GitHubCommitRequestService(gitHubRequestDto, gitHubApiConnectionService);
 
-				GitHubService gitHubService = new GitHubService(gitHubPullRequestService, gitHubIssuesRequestService);
+				GitHubService gitHubService = new GitHubService(gitHubPullRequestService, gitHubIssuesRequestService, gitHubCommitRequestService);
 
 				gitHubService.CreatePullRequestCSVFile();
 			}

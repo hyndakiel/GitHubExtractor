@@ -6,5 +6,6 @@ namespace GitHubExtractor.Services.Interfaces
 	public interface IGitHubPullRequestService
 	{
 		public IEnumerable<PullRequestResponse> List();
+		public IEnumerable<PullRequestComment> Comments(int pullRequestNumber);
 	}
 }

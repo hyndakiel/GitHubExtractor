@@ -13,6 +13,20 @@ namespace GitHubExtractor.Services
 		{
 		}
 
+		public IEnumerable<PullRequestComment> Comments(int pullRequestNumber)
+		{
+			string url = string.Format("/repos/{0}/{1}/pulls/{2}/comments", GitRepoUserName, GitProject, pullRequestNumber);
+
+			BasicAuth basicAuth = BasicAuth;
+
+			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
+			string response = gitHubApiConnectionService.AccessEndPoint(url, null, false, basicAuth, "GitHub");
+
+			List<PullRequestComment> pullRequests = UtilitiesObj.JsonDeserializeObject<List<PullRequestComment>>(response);
+
+			return pullRequests;
+		}
+
 		public IEnumerable<PullRequestResponse> List()
 		{
 			string url = string.Format("/repos/{0}/{1}/pulls", GitRepoUserName, GitProject);
