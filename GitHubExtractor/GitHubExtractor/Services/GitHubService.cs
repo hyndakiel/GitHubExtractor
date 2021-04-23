@@ -68,13 +68,7 @@ namespace GitHubExtractor.Services
 
 				TransformIntoCsvFormat(pullRequestResponse, issue, pullRequestComments, issueComments, commit, data);
 			}
-			//List<PullRequestCsvFileData> data = new List<PullRequestCsvFileData>()
-			//{
-			//	new PullRequestCsvFileData()
-			//	{
-			//		PrNumber = "1",
-			//	}
-			//};
+
 			LOG.Info("INIT - CREATING CSV");
 			CreateCsvFile<PullRequestCsvFileData, PullRequestCsvFileDataMap>(data);
 			LOG.Info("END - CREATING CSV");
