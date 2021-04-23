@@ -1,15 +1,10 @@
 ﻿using CsvHelper.Configuration;
-using System.Collections.Generic;
 using System.Globalization;
 
 namespace GitHubExtractor.Dtos
 {
 	public class PullRequestCsvFileDataMap : ClassMap<PullRequestCsvFileData>
 	{
-		public readonly IEnumerable<string> HEADERS = new List<string>()
-		{
-			"PR_Number", "Issue_Closed_Date", "Issue_Author", "Issue_Title", "Issue_Body", "Issue_Comments", "PR_Closed_Date", "PR_Author", "PR_Title", "PR_Body", "PR_Comments", "Commit_Author", "Commit_Date", "Commit_Message", "isPR",
-		};
 
 		public PullRequestCsvFileDataMap()
 		{
