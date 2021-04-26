@@ -42,36 +42,59 @@ namespace GitHubExtractor.Services
 			LOG.Info("INIT - GET PULL REQUESTS");
 			IGitHubPullRequestService gitHubPullRequestService = GitHubPullRequestService;
 			IEnumerable<PullRequestResponse> pullRequests = gitHubPullRequestService.List();
-			LOG.Info("END - GET PULL REQUESTS - RESULT {0} PULL REQUESTS", pullRequests.Count());
+			int pullRequestsCount = pullRequests.Count();
+			LOG.Info("END - GET PULL REQUESTS - RESULT {0} PULL REQUESTS", pullRequestsCount);
 
 			List<PullRequestCsvFileData> data = new List<PullRequestCsvFileData>();
-			IGitHubIssuesRequestService gitHubIssuesRequestService = GitHubIssuesRequestService;
 
+			int count = 0;
+			const int logCoeficient = 10;
 			foreach (PullRequestResponse pullRequestResponse in pullRequests)
 			{
-				LOG.Info("INIT - GET COMMENTS FROM PULL REQUEST {0}", pullRequestResponse.Number);
-				IEnumerable<PullRequestComment> pullRequestComments = gitHubPullRequestService.Comments(pullRequestResponse.Number);
-				LOG.Info("INIT - GET COMMENTS FROM PULL REQUEST {0}", pullRequestResponse.Number);
 
-				LOG.Info("INIT - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
-				IssueResponse issue = gitHubIssuesRequestService.Get(pullRequestResponse.Number);
-				LOG.Info("END - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
+				if (count == 0 || (count / logCoeficient == 0) || (count == pullRequestsCount - 1))
+				{
+					LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, pullRequestsCount);
+				}
+				try
+				{
+					GetPullRequestData(gitHubPullRequestService, data, pullRequestResponse);
+				}
+				catch (Exception e)
+				{
+					LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.Number, e);
+				}
 
-				LOG.Info("INIT - GET COMMENTS FROM ISSUE {0}", issue.Number);
-				IEnumerable<IssueCommentResponse> issueComments = gitHubIssuesRequestService.GetIssueComments(issue.Number);
-				LOG.Info("END - GET COMMENTS FROM ISSUE {0}", issue.Number);
-
-				LOG.Info("INIT - GET COMMITS FROM PULL REQUEST {0}", pullRequestResponse.Number);
-				IGitHubCommitRequestService gitHubCommitRequestService = GitHubCommitRequestService;
-				Commit commit = gitHubCommitRequestService.GetCommits(pullRequestResponse.Head.Sha);
-				LOG.Info("END - GET COMMITS PULL REQUEST {0}", pullRequestResponse.Number);
-
-				TransformIntoCsvFormat(pullRequestResponse, issue, pullRequestComments, issueComments, commit, data);
 			}
 
 			LOG.Info("INIT - CREATING CSV");
 			CreateCsvFile<PullRequestCsvFileData, PullRequestCsvFileDataMap>(data);
 			LOG.Info("END - CREATING CSV");
+		}
+
+		private void GetPullRequestData(IGitHubPullRequestService gitHubPullRequestService, List<PullRequestCsvFileData> data, PullRequestResponse pullRequestResponse)
+		{
+
+			IGitHubIssuesRequestService gitHubIssuesRequestService = GitHubIssuesRequestService;
+
+			LOG.Info("INIT - GET COMMENTS FROM PULL REQUEST {0}", pullRequestResponse.Number);
+			IEnumerable<PullRequestComment> pullRequestComments = gitHubPullRequestService.Comments(pullRequestResponse.Number);
+			LOG.Info("INIT - GET COMMENTS FROM PULL REQUEST {0}", pullRequestResponse.Number);
+
+			LOG.Info("INIT - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
+			IssueResponse issue = gitHubIssuesRequestService.Get(pullRequestResponse.Number);
+			LOG.Info("END - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
+
+			LOG.Info("INIT - GET COMMENTS FROM ISSUE {0}", issue.Number);
+			IEnumerable<IssueCommentResponse> issueComments = gitHubIssuesRequestService.GetIssueComments(issue.Number);
+			LOG.Info("END - GET COMMENTS FROM ISSUE {0}", issue.Number);
+
+			LOG.Info("INIT - GET COMMITS FROM PULL REQUEST {0}", pullRequestResponse.Number);
+			IGitHubCommitRequestService gitHubCommitRequestService = GitHubCommitRequestService;
+			Commit commit = gitHubCommitRequestService.GetCommits(pullRequestResponse.Head.Sha);
+			LOG.Info("END - GET COMMITS PULL REQUEST {0}", pullRequestResponse.Number);
+
+			TransformIntoCsvFormat(pullRequestResponse, issue, pullRequestComments, issueComments, commit, data);
 		}
 
 		public void CreateCommitsCSVFile()
