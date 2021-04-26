@@ -103,7 +103,7 @@ namespace GitHubExtractor.Services.Connection
 			{
 				Tuple<string, string>[] headers = new Tuple<string, string>[]
 				{
-					new Tuple<string, string>("Authorization", auth.Authorization),
+					//new Tuple<string, string>("Authorization", auth.Authorization),
 					new Tuple<string, string>("TOKEN", auth.Token),
 					new Tuple<string, string>("User-Agent", auth.Authorization),
 				};
