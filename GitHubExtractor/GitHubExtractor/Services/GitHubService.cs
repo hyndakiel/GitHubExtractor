@@ -74,6 +74,11 @@ namespace GitHubExtractor.Services
 			LOG.Info("END - CREATING CSV");
 		}
 
+		public void CreateCommitsCSVFile()
+		{
+			//does nothing
+		}
+
 		private void TransformIntoCsvFormat(PullRequestResponse pullRequestResponse, IssueResponse issue, IEnumerable<PullRequestComment> pullRequestComments, IEnumerable<IssueCommentResponse> issueComments, Commit commit, List<PullRequestCsvFileData> data)
 		{
 			PullRequestCsvFileData item = new PullRequestCsvFileData();

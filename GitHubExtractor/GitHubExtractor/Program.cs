@@ -36,6 +36,7 @@ namespace GitHubExtractor
 				GitHubService gitHubService = new GitHubService(gitHubPullRequestService, gitHubIssuesRequestService, gitHubCommitRequestService);
 
 				gitHubService.CreatePullRequestCSVFile();
+				gitHubService.CreateCommitsCSVFile();
 			}
 			catch (Exception e)
 			{

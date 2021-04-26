@@ -4,5 +4,6 @@
 	{
 		public IGitHubPullRequestService GitHubPullRequestService { get; set; }
 		void CreatePullRequestCSVFile();
+		void CreateCommitsCSVFile();
 	}
 }
