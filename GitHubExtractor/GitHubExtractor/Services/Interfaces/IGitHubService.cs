@@ -1,9 +1,13 @@
-﻿namespace GitHubExtractor.Services.Interfaces
+﻿using GitHubExtractor.Models;
+using System.Collections.Generic;
+
+namespace GitHubExtractor.Services.Interfaces
 {
 	interface IGitHubService
 	{
 		public IGitHubPullRequestService GitHubPullRequestService { get; set; }
-		void CreatePullRequestCSVFile();
-		void CreateCommitsCSVFile();
+		void CreatePullRequestCSVFile(IList<PullRequestResponse> pullRequests);
+		void CreateCommitsCSVFile(IList<PullRequestResponse> pullRequests);
+		void CreateFiles();
 	}
 }

@@ -39,30 +39,48 @@ namespace GitHubExtractor.Services
 			//FileCreator = fileCreator;
 		}
 
-		public void CreatePullRequestCSVFile()
+		public void CreateFiles()
 		{
 			LOG.Info("INIT - GET PULL REQUESTS");
 			IGitHubPullRequestService gitHubPullRequestService = GitHubPullRequestService;
 			IList<PullRequestResponse> pullRequests = gitHubPullRequestService.List();
+
 			int pullRequestsCount = pullRequests.Count();
 			LOG.Info("END - GET PULL REQUESTS - RESULT {0} PULL REQUESTS", pullRequestsCount);
 
-			GetPullRequestsData(gitHubPullRequestService, pullRequests);
+			CreatePullRequestCSVFile(pullRequests);
+			CreateCommitsCSVFile(pullRequests);
 		}
 
-		private void GetPullRequestsData(IGitHubPullRequestService gitHubPullRequestService, IList<PullRequestResponse> pullRequests)
+		public void CreatePullRequestCSVFile(IList<PullRequestResponse> pullRequests)
 		{
-			int count = 0;
-			const int logCoeficient = 10;
+			Action<List<PullRequestCsvFileData>, PullRequestResponse> action = (data, pullRequestResponse) =>
+			{
+				IGitHubPullRequestService gitHubPullRequestService = GitHubPullRequestService;
+
+				GetPullRequestData(gitHubPullRequestService, data, pullRequestResponse);
+			};
+
+			GetPullRequestsData<PullRequestCsvFileData, PullRequestCsvFileDataMap>(pullRequests, action);
+		}
+
+		private void GetPullRequestsData<T, TClassMap>(IList<PullRequestResponse> pullRequests, Action<List<T>, PullRequestResponse> action) where TClassMap : ClassMap
+		{
 			int pullRequestsCount = pullRequests.Count();
 
 			AppConfig instance = AppConfig.Instance;
 			bool debugMode = instance.GetConfigBool("DebbugMode");
 			int runLimit = (debugMode && DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE < pullRequestsCount)
 				? DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE : pullRequestsCount;
+
+			int count = 0;
+			const int logCoeficient = 10;
+
 			if (pullRequests.Any())
 			{
-				List<PullRequestCsvFileData> data = new List<PullRequestCsvFileData>();
+				List<T> data = new List<T>();
+
+
 				for (; count < runLimit; count++)
 				{
 					PullRequestResponse pullRequestResponse = pullRequests[count];
@@ -72,17 +90,17 @@ namespace GitHubExtractor.Services
 					}
 					try
 					{
-						GetPullRequestData(gitHubPullRequestService, data, pullRequestResponse);
+						action(data, pullRequestResponse);
 					}
 					catch (Exception e)
 					{
 						LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.Number, e);
 					}
-
 				}
 
+
 				LOG.Info("INIT - CREATING CSV");
-				CreateCsvFile<PullRequestCsvFileData, PullRequestCsvFileDataMap>(data);
+				CreateCsvFile<T, TClassMap>(data);
 				LOG.Info("END - CREATING CSV");
 			}
 			else
@@ -116,7 +134,7 @@ namespace GitHubExtractor.Services
 			TransformIntoCsvFormat(pullRequestResponse, issue, pullRequestComments, issueComments, commit, data);
 		}
 
-		public void CreateCommitsCSVFile()
+		public void CreateCommitsCSVFile(IList<PullRequestResponse> pullRequests)
 		{
 			//does nothing
 		}
@@ -141,6 +159,7 @@ namespace GitHubExtractor.Services
 			//item.IsPr = pullRequestResponse.
 
 			data.Add(item);
+
 		}
 
 		private string CreateIssueCommentsField(IEnumerable<IssueCommentResponse> issueComments)
