@@ -28,7 +28,7 @@ namespace GitHubExtractor.Services
 
 		private readonly string FILE_PATH_KEY = "PullRequestFilePathKey";
 
-		private readonly int DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE = 50;
+		private readonly int DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE = 10;
 
 		public GitHubService(IGitHubPullRequestService gitHubPullRequestService, IGitHubIssuesRequestService gitHubissuesRequestService, IGitHubCommitRequestService gitHubCommitRequestService)//, IFileCreator fileCreator)
 		{
