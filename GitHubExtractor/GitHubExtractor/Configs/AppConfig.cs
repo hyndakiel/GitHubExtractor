@@ -15,10 +15,6 @@ namespace GitHubExtractor.Configs
 				}
 				return _instance;
 			}
-			private set
-			{
-				//does nothing
-			}
 		}
 
 		private IConfiguration Configuration { get; set; }
