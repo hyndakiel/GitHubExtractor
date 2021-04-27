@@ -47,35 +47,48 @@ namespace GitHubExtractor.Services
 			int pullRequestsCount = pullRequests.Count();
 			LOG.Info("END - GET PULL REQUESTS - RESULT {0} PULL REQUESTS", pullRequestsCount);
 
-			List<PullRequestCsvFileData> data = new List<PullRequestCsvFileData>();
+			GetPullRequestsData(gitHubPullRequestService, pullRequests);
+		}
 
+		private void GetPullRequestsData(IGitHubPullRequestService gitHubPullRequestService, IList<PullRequestResponse> pullRequests)
+		{
 			int count = 0;
 			const int logCoeficient = 10;
+			int pullRequestsCount = pullRequests.Count();
 
 			AppConfig instance = AppConfig.Instance;
 			bool debugMode = instance.GetConfigBool("DebbugMode");
-			int runLimit = debugMode ? DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE : pullRequestsCount;
-			for (; count < runLimit; count++)
+			int runLimit = (debugMode && DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE < pullRequestsCount)
+				? DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE : pullRequestsCount;
+			if (pullRequests.Any())
 			{
-				PullRequestResponse pullRequestResponse = pullRequests[count];
-				if (count == 0 || (count / logCoeficient == 0) || (count == pullRequestsCount - 1))
+				List<PullRequestCsvFileData> data = new List<PullRequestCsvFileData>();
+				for (; count < runLimit; count++)
 				{
-					LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, pullRequestsCount);
-				}
-				try
-				{
-					GetPullRequestData(gitHubPullRequestService, data, pullRequestResponse);
-				}
-				catch (Exception e)
-				{
-					LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.Number, e);
+					PullRequestResponse pullRequestResponse = pullRequests[count];
+					if (count == 0 || (count / logCoeficient == 0) || (count == pullRequestsCount - 1))
+					{
+						LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, pullRequestsCount);
+					}
+					try
+					{
+						GetPullRequestData(gitHubPullRequestService, data, pullRequestResponse);
+					}
+					catch (Exception e)
+					{
+						LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.Number, e);
+					}
+
 				}
 
+				LOG.Info("INIT - CREATING CSV");
+				CreateCsvFile<PullRequestCsvFileData, PullRequestCsvFileDataMap>(data);
+				LOG.Info("END - CREATING CSV");
 			}
-
-			LOG.Info("INIT - CREATING CSV");
-			CreateCsvFile<PullRequestCsvFileData, PullRequestCsvFileDataMap>(data);
-			LOG.Info("END - CREATING CSV");
+			else
+			{
+				LOG.Info("No pull requests available to get");
+			}
 		}
 
 		private void GetPullRequestData(IGitHubPullRequestService gitHubPullRequestService, List<PullRequestCsvFileData> data, PullRequestResponse pullRequestResponse)
