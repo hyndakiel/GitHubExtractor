@@ -34,7 +34,8 @@ namespace GitHubExtractor.Services
 			BasicAuth basicAuth = BasicAuth;
 
 			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
-			string response = gitHubApiConnectionService.AccessEndPoint(url, null, false, basicAuth, "GitHub");
+			PullRequestParamns pullRequestParamns = new PullRequestParamns("open", "master", "created");
+			string response = gitHubApiConnectionService.AccessEndPoint(url, pullRequestParamns, false, basicAuth, "GitHub");
 
 			List<PullRequestResponse> pullRequests = UtilitiesObj.JsonDeserializeObject<List<PullRequestResponse>>(response);
 
