@@ -66,7 +66,7 @@ namespace GitHubExtractor.Services
 				for (; count < runLimit; count++)
 				{
 					PullRequestResponse pullRequestResponse = pullRequests[count];
-					if (count == 0 || (count / logCoeficient == 0) || (count == pullRequestsCount - 1))
+					if (count == 0 || (count % logCoeficient == 0) || (count == pullRequestsCount - 1))
 					{
 						LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, pullRequestsCount);
 					}
