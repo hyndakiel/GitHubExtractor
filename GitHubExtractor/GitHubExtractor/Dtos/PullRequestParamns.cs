@@ -4,6 +4,10 @@ namespace GitHubExtractor.Dtos
 {
 	public class PullRequestParamns
 	{
+		public PullRequestParamns()
+		{
+		}
+
 		public PullRequestParamns(string state, string @base, string sort)
 		{
 			State = state;
