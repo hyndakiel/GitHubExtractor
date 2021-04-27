@@ -2,7 +2,7 @@
 
 namespace GitHubExtractor.Dtos
 {
-	public class PullRequestCsvFileData : AbstractCsvFileData
+	public class PullRequestCsvFileData
 	{
 		public string PrNumber { get; internal set; }
 		public DateTime? IssueClosedDate { get; internal set; }
