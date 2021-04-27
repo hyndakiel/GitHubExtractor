@@ -37,5 +37,11 @@ namespace GitHubExtractor.Configs
 			string config = Configuration[key];
 			return config;
 		}
+
+		public bool GetConfigBool(string key)
+		{
+			string valueAsString = GetConfig(key);
+			return bool.Parse(valueAsString);
+		}
 	}
 }

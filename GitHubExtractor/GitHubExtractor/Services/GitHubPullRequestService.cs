@@ -27,7 +27,7 @@ namespace GitHubExtractor.Services
 			return pullRequests;
 		}
 
-		public IEnumerable<PullRequestResponse> List()
+		public IList<PullRequestResponse> List()
 		{
 			string url = string.Format("/repos/{0}/{1}/pulls", GitRepoUserName, GitProject);
 
@@ -35,6 +35,7 @@ namespace GitHubExtractor.Services
 
 			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
 			PullRequestParamns pullRequestParamns = new PullRequestParamns("open", "master", "created");
+
 			string response = gitHubApiConnectionService.AccessEndPoint(url, pullRequestParamns, false, basicAuth, "GitHub");
 
 			List<PullRequestResponse> pullRequests = UtilitiesObj.JsonDeserializeObject<List<PullRequestResponse>>(response);

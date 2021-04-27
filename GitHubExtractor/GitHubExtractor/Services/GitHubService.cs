@@ -28,6 +28,8 @@ namespace GitHubExtractor.Services
 
 		private readonly string FILE_PATH_KEY = "PullRequestFilePathKey";
 
+		private readonly int DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE = 50;
+
 		public GitHubService(IGitHubPullRequestService gitHubPullRequestService, IGitHubIssuesRequestService gitHubissuesRequestService, IGitHubCommitRequestService gitHubCommitRequestService)//, IFileCreator fileCreator)
 		{
 
@@ -41,7 +43,7 @@ namespace GitHubExtractor.Services
 		{
 			LOG.Info("INIT - GET PULL REQUESTS");
 			IGitHubPullRequestService gitHubPullRequestService = GitHubPullRequestService;
-			IEnumerable<PullRequestResponse> pullRequests = gitHubPullRequestService.List();
+			IList<PullRequestResponse> pullRequests = gitHubPullRequestService.List();
 			int pullRequestsCount = pullRequests.Count();
 			LOG.Info("END - GET PULL REQUESTS - RESULT {0} PULL REQUESTS", pullRequestsCount);
 
@@ -49,9 +51,13 @@ namespace GitHubExtractor.Services
 
 			int count = 0;
 			const int logCoeficient = 10;
-			foreach (PullRequestResponse pullRequestResponse in pullRequests)
-			{
 
+			AppConfig instance = AppConfig.Instance;
+			bool debugMode = instance.GetConfigBool("DebbugMode");
+			int runLimit = debugMode ? DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE : pullRequestsCount;
+			for (; count < runLimit; count++)
+			{
+				PullRequestResponse pullRequestResponse = pullRequests[count];
 				if (count == 0 || (count / logCoeficient == 0) || (count == pullRequestsCount - 1))
 				{
 					LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, pullRequestsCount);
