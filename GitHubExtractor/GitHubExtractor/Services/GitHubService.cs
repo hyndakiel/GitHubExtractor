@@ -64,6 +64,21 @@ namespace GitHubExtractor.Services
 			GetPullRequestsData<PullRequestCsvFileData, PullRequestCsvFileDataMap>(pullRequests, action);
 		}
 
+		public void CreateCommitsCSVFile(IList<PullRequestResponse> pullRequests)
+		{
+			Action<List<CommitCsvFileData>, PullRequestResponse> action = (data, pullRequest) =>
+			{
+				GetCommitsData(data, pullRequest);
+			};
+
+			GetPullRequestsData<CommitCsvFileData, CommitCsvFileDataMap>(pullRequests, action);
+		}
+
+		private void GetCommitsData(List<CommitCsvFileData> data, PullRequestResponse pullRequest)
+		{
+			throw new NotImplementedException();
+		}
+
 		private void GetPullRequestsData<T, TClassMap>(IList<PullRequestResponse> pullRequests, Action<List<T>, PullRequestResponse> action) where TClassMap : ClassMap
 		{
 			int pullRequestsCount = pullRequests.Count();
@@ -132,11 +147,6 @@ namespace GitHubExtractor.Services
 			LOG.Info("END - GET COMMITS PULL REQUEST {0}", pullRequestResponse.Number);
 
 			TransformIntoCsvFormat(pullRequestResponse, issue, pullRequestComments, issueComments, commit, data);
-		}
-
-		public void CreateCommitsCSVFile(IList<PullRequestResponse> pullRequests)
-		{
-			//does nothing
 		}
 
 		private void TransformIntoCsvFormat(PullRequestResponse pullRequestResponse, IssueResponse issue, IEnumerable<PullRequestComment> pullRequestComments, IEnumerable<IssueCommentResponse> issueComments, Commit commit, List<PullRequestCsvFileData> data)
