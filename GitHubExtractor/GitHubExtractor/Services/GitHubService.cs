@@ -74,9 +74,21 @@ namespace GitHubExtractor.Services
 			GetPullRequestsData<CommitCsvFileData, CommitCsvFileDataMap>(pullRequests, action);
 		}
 
-		private void GetCommitsData(List<CommitCsvFileData> data, PullRequestResponse pullRequest)
+		private void GetCommitsData(List<CommitCsvFileData> data, PullRequestResponse pullRequestResponse)
 		{
-			throw new NotImplementedException();
+			Commit commit = GetCommitData(pullRequestResponse);
+
+			TransformIntoCsvFormat(pullRequestResponse, commit, data);
+		}
+
+		private Commit GetCommitData(PullRequestResponse pullRequestResponse)
+		{
+			LOG.Info("INIT - GET COMMITS FROM PULL REQUEST {0}", pullRequestResponse.Number);
+			IGitHubCommitRequestService gitHubCommitRequestService = GitHubCommitRequestService;
+			Commit commit = gitHubCommitRequestService.GetCommits(pullRequestResponse.Head.Sha);
+			LOG.Info("END - GET COMMITS PULL REQUEST {0}", pullRequestResponse.Number);
+
+			return commit;
 		}
 
 		private void GetPullRequestsData<T, TClassMap>(IList<PullRequestResponse> pullRequests, Action<List<T>, PullRequestResponse> action) where TClassMap : ClassMap
@@ -141,10 +153,7 @@ namespace GitHubExtractor.Services
 			IEnumerable<IssueCommentResponse> issueComments = gitHubIssuesRequestService.GetIssueComments(issue.Number);
 			LOG.Info("END - GET COMMENTS FROM ISSUE {0}", issue.Number);
 
-			LOG.Info("INIT - GET COMMITS FROM PULL REQUEST {0}", pullRequestResponse.Number);
-			IGitHubCommitRequestService gitHubCommitRequestService = GitHubCommitRequestService;
-			Commit commit = gitHubCommitRequestService.GetCommits(pullRequestResponse.Head.Sha);
-			LOG.Info("END - GET COMMITS PULL REQUEST {0}", pullRequestResponse.Number);
+			Commit commit = GetCommitData(pullRequestResponse);
 
 			TransformIntoCsvFormat(pullRequestResponse, issue, pullRequestComments, issueComments, commit, data);
 		}
@@ -169,7 +178,19 @@ namespace GitHubExtractor.Services
 			//item.IsPr = pullRequestResponse.
 
 			data.Add(item);
+		}
 
+		private void TransformIntoCsvFormat(PullRequestResponse pullRequestResponse, Commit commit, List<CommitCsvFileData> data)
+		{
+			CommitCsvFileData item = new CommitCsvFileData();
+			item.PrNumber = pullRequestResponse.Number;
+			item.AuthorLogin = commit.CommitInfo.Author.Name;
+			item.CommiterLogin = commit.CommitInfo.Committer.Name;
+			item.SHA = pullRequestResponse.Head.Sha;
+			item.CommitMessage = commit.CommitInfo.Message;
+			item.PrepareChangesInfo(commit);
+
+			data.Add(item);
 		}
 
 		private string CreateIssueCommentsField(IEnumerable<IssueCommentResponse> issueComments)
