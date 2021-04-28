@@ -5,9 +5,12 @@ namespace GitHubExtractor.Models
 	public class CommitInfo
 	{
 		[JsonProperty("author")]
-		public Author Author { get; internal set; }
+		public Author Author { get; set; }
+
+		[JsonProperty("committer")]
+		public Committer Committer { get; set; }
 
 		[JsonProperty("message")]
-		public string Message { get; internal set; }
+		public string Message { get; set; }
 	}
 }
