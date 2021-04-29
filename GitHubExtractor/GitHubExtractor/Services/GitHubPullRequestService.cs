@@ -36,7 +36,7 @@ namespace GitHubExtractor.Services
 			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
 			PullRequestParamns pullRequestParamns = new PullRequestParamns();
 			pullRequestParamns.Sort = "created";
-			pullRequestParamns.State = "all";
+			pullRequestParamns.State = "closed";
 
 			string response = gitHubApiConnectionService.AccessEndPoint(url, pullRequestParamns, false, basicAuth, "GitHub");
 
