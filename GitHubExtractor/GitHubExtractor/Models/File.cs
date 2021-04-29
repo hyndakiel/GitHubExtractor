@@ -14,5 +14,7 @@ namespace GitHubExtractor.Models
 		public int Changes { get; set; }
 		[JsonProperty("patch")]
 		public string Patch { get; set; }
+		[JsonProperty("status")]
+		public string Status { get; set; }
 	}
 }

@@ -29,6 +29,7 @@ namespace GitHubExtractor.Dtos
 		{
 			StringBuilder stringBuilderFileNames = new StringBuilder();
 			StringBuilder stringBuilderPatchText = new StringBuilder();
+			StringBuilder stringBuilderStatus = new StringBuilder();
 
 			stringBuilderFileNames.Append("[");
 			foreach (File file in commit.Files)
@@ -38,11 +39,15 @@ namespace GitHubExtractor.Dtos
 
 				stringBuilderPatchText.Append(file.Patch);
 				stringBuilderPatchText.Append(", ");
+
+				stringBuilderStatus.Append(file.Status);
+				stringBuilderStatus.Append(", ");
 			}
 			stringBuilderFileNames.Append("]");
 
 			this.FileName = stringBuilderFileNames.ToString();
 			this.PatchText = stringBuilderPatchText.ToString();
+			this.StatusChanges = stringBuilderStatus.ToString();
 		}
 	}
 }
