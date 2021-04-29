@@ -223,7 +223,7 @@ namespace GitHubExtractor.Services
 
 			LOG.Info("INIT - SAVING CSV TO PATH: {0} WITH NAME {1}", filePath, fileName);
 			writer.Flush();
-			LOG.Info("INIT - SAVING CSV TO PATH: {0} WITH NAME {1}", filePath, fileName);
+			LOG.Info("END - SAVING CSV TO PATH: {0} WITH NAME {1}", filePath, fileName);
 		}
 
 		private string GetFileName(string name)
