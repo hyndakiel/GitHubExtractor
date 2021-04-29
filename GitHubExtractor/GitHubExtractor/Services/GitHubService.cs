@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace GitHubExtractor.Services
 {
@@ -156,7 +155,7 @@ namespace GitHubExtractor.Services
 
 			LOG.Info("INIT - GET COMMENTS FROM PULL REQUEST {0}", pullRequestResponse.Number);
 			IEnumerable<PullRequestComment> pullRequestComments = gitHubPullRequestService.Comments(pullRequestResponse.Number);
-			LOG.Info("INIT - GET COMMENTS FROM PULL REQUEST {0}", pullRequestResponse.Number);
+			LOG.Info("END - GET COMMENTS FROM PULL REQUEST {0}", pullRequestResponse.Number);
 
 			LOG.Info("INIT - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
 			IssueResponse issue = gitHubIssuesRequestService.Get(pullRequestResponse.Number);
@@ -174,17 +173,17 @@ namespace GitHubExtractor.Services
 		private void TransformIntoCsvFormat(PullRequestResponse pullRequestResponse, IssueResponse issue, IEnumerable<PullRequestComment> pullRequestComments, IEnumerable<IssueCommentResponse> issueComments, Commit commit, List<PullRequestCsvFileData> data)
 		{
 			PullRequestCsvFileData item = new PullRequestCsvFileData();
-			item.PrNumber = pullRequestResponse.Id;
+			item.PrNumber = pullRequestResponse.Number;
 			item.IssueClosedDate = issue.ClosedAt;
 			item.IssueAuthor = issue.Milestone?.Creator?.Login;
 			item.IssueTitle = issue.Title;
 			item.IssueBody = issue.Body;
-			item.IssueComments = CreateIssueCommentsField(issueComments);
+			item.IssueComments = item.CreateIssueCommentsField(issueComments);
 			item.PrCloseData = pullRequestResponse.CloseDate;
 			item.PrAuthor = pullRequestResponse.User?.Login;
 			item.PrTitle = pullRequestResponse.Title;
 			item.PrBody = pullRequestResponse.Body;
-			item.PrComments = CreatePullRequestCommentsField(pullRequestComments);
+			item.PrComments = item.CreatePullRequestCommentsField(pullRequestComments);
 			item.CommitAuthor = commit.CommitInfo?.Author?.Name;
 			item.CommitDate = commit.CommitInfo?.Author?.Date;
 			item.CommitMessage = commit.CommitInfo?.Message;
@@ -204,30 +203,6 @@ namespace GitHubExtractor.Services
 			item.PrepareChangesInfo(commit);
 
 			data.Add(item);
-		}
-
-		private string CreateIssueCommentsField(IEnumerable<IssueCommentResponse> issueComments)
-		{
-			StringBuilder builder = new StringBuilder();
-
-			foreach (IssueCommentResponse comment in issueComments)
-			{
-				builder.Append(comment.ToString());
-			}
-
-			return builder.ToString();
-		}
-
-		private string CreatePullRequestCommentsField(IEnumerable<PullRequestComment> pullRequestComments)
-		{
-			StringBuilder builder = new StringBuilder();
-
-			foreach (PullRequestComment comment in pullRequestComments)
-			{
-				builder.Append(comment.ToString());
-			}
-
-			return builder.ToString();
 		}
 
 		private void CreateCsvFile<T, TClassMap>(IEnumerable<T> data, string filePath, string fileName) where TClassMap : ClassMap
