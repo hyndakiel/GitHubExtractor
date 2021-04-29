@@ -26,7 +26,8 @@ namespace GitHubExtractor.Services
 
 		private readonly string DELIMETER = "\a";
 
-		private readonly string FILE_PATH_KEY = "PullRequestFilePathKey";
+		private readonly string PULL_REQUEST_FILE_PATH_KEY = "PullRequestFilePathKey";
+		private readonly string COMMIT_FILE_PATH_KEY = "CommitFilePathKey";
 
 		private readonly int DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE = 10;
 
@@ -61,7 +62,13 @@ namespace GitHubExtractor.Services
 				GetPullRequestData(gitHubPullRequestService, data, pullRequestResponse);
 			};
 
-			GetPullRequestsData<PullRequestCsvFileData, PullRequestCsvFileDataMap>(pullRequests, action);
+			string filePathKey = PULL_REQUEST_FILE_PATH_KEY;
+			string filePath = GetFilePath(filePathKey);
+
+			const string name = "pull-request";
+			string fileName = GetFileName(name);
+
+			GetPullRequestsData<PullRequestCsvFileData, PullRequestCsvFileDataMap>(pullRequests, action, filePath, fileName);
 		}
 
 		public void CreateCommitsCSVFile(IList<PullRequestResponse> pullRequests)
@@ -71,7 +78,13 @@ namespace GitHubExtractor.Services
 				GetCommitsData(data, pullRequest);
 			};
 
-			GetPullRequestsData<CommitCsvFileData, CommitCsvFileDataMap>(pullRequests, action);
+			string filePathKey = COMMIT_FILE_PATH_KEY;
+			string filePath = GetFilePath(filePathKey);
+
+			const string name = "commit";
+			string fileName = GetFileName(name);
+
+			GetPullRequestsData<CommitCsvFileData, CommitCsvFileDataMap>(pullRequests, action, filePath, fileName);
 		}
 
 		private void GetCommitsData(List<CommitCsvFileData> data, PullRequestResponse pullRequestResponse)
@@ -91,7 +104,7 @@ namespace GitHubExtractor.Services
 			return commit;
 		}
 
-		private void GetPullRequestsData<T, TClassMap>(IList<PullRequestResponse> pullRequests, Action<List<T>, PullRequestResponse> action) where TClassMap : ClassMap
+		private void GetPullRequestsData<T, TClassMap>(IList<PullRequestResponse> pullRequests, Action<List<T>, PullRequestResponse> action, string filePath, string fileName) where TClassMap : ClassMap
 		{
 			int pullRequestsCount = pullRequests.Count();
 
@@ -127,7 +140,7 @@ namespace GitHubExtractor.Services
 
 
 				LOG.Info("INIT - CREATING CSV");
-				CreateCsvFile<T, TClassMap>(data);
+				CreateCsvFile<T, TClassMap>(data, filePath, fileName);
 				LOG.Info("END - CREATING CSV");
 			}
 			else
@@ -217,13 +230,9 @@ namespace GitHubExtractor.Services
 			return builder.ToString();
 		}
 
-		private void CreateCsvFile<T, TClassMap>(IEnumerable<T> data) where TClassMap : ClassMap
+		private void CreateCsvFile<T, TClassMap>(IEnumerable<T> data, string filePath, string fileName) where TClassMap : ClassMap
 		{
-			string filePath = GetFilePath();
-
 			Directory.CreateDirectory(filePath);
-
-			string fileName = GetFileName();
 
 			string completePath = filePath + fileName;
 			StreamWriter writer = new StreamWriter(completePath);
@@ -242,16 +251,16 @@ namespace GitHubExtractor.Services
 			LOG.Info("INIT - SAVING CSV TO PATH: {0} WITH NAME {1}", filePath, fileName);
 		}
 
-		private string GetFileName()
+		private string GetFileName(string name)
 		{
-			string fileName = String.Format("{0:yyyy-MM-dd_HH-mm-ss}-pull_request.csv", DateTime.Now);
+			string fileName = String.Format("{0:yyyy-MM-dd_HH-mm-ss}-{1}.csv", DateTime.Now, name);
 			return fileName;
 		}
 
-		private string GetFilePath()
+		private string GetFilePath(string key)
 		{
 			AppConfig appConfig = AppConfig.Instance;
-			string filePath = appConfig.GetConfig(FILE_PATH_KEY);
+			string filePath = appConfig.GetConfig(key);
 			return filePath;
 		}
 
