@@ -17,12 +17,14 @@ namespace GitHubExtractor.Dtos
 		public int Additions { get; set; }
 		public int Deletions { get; set; }
 		public string StatusChanges { get; set; }
+		public int Changes { get; internal set; }
 
 		public void PrepareChangesInfo(Commit commit)
 		{
 			CreateFilesField(commit);
 			this.Additions = commit.Files.Sum(file => file.Additions);
 			this.Deletions = commit.Files.Sum(file => file.Deletions);
+			this.Changes = commit.Files.Sum(file => file.Changes);
 		}
 
 		private void CreateFilesField(Commit commit)
