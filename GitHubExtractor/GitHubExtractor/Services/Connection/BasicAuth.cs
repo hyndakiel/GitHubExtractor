@@ -16,5 +16,9 @@
 			this.Token = token;
 		}
 
+		public BasicAuth(string token)
+		{
+			this.Token = token;
+		}
 	}
 }

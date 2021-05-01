@@ -19,10 +19,9 @@ namespace GitHubExtractor
 			LOG.Info("INIT");
 			try
 			{
-				string gitRequestUser = args[0];
-				string gitRequestToken = args[1];
+				string gitRequestToken = args[0];
 
-				BasicAuth basicAuth = new BasicAuth(gitRequestUser, gitRequestToken);
+				BasicAuth basicAuth = new BasicAuth(gitRequestToken);
 
 				GitHubRequestDto gitHubRequestDto = new GitHubRequestDto(basicAuth);
 
