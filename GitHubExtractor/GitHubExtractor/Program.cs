@@ -1,6 +1,7 @@
 ﻿using GitHubExtractor.Dtos;
 using GitHubExtractor.Services;
 using GitHubExtractor.Services.Connection;
+using GitHubExtractor.Services.Files;
 using NLog;
 using System;
 using System.Text;
@@ -32,7 +33,9 @@ namespace GitHubExtractor
 				GitHubIssuesRequestService gitHubIssuesRequestService = new GitHubIssuesRequestService(gitHubRequestDto, gitHubApiConnectionService);
 				GitHubCommitRequestService gitHubCommitRequestService = new GitHubCommitRequestService(gitHubRequestDto, gitHubApiConnectionService);
 
-				GitHubService gitHubService = new GitHubService(gitHubPullRequestService, gitHubIssuesRequestService, gitHubCommitRequestService);
+				CsvFileCreator fileCreator = new CsvFileCreator();
+
+				GitHubService gitHubService = new GitHubService(gitHubPullRequestService, gitHubIssuesRequestService, gitHubCommitRequestService, fileCreator);
 
 				gitHubService.CreateFiles();
 

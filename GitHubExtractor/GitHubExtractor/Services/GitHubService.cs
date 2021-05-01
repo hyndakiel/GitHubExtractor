@@ -1,14 +1,12 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
+﻿using CsvHelper.Configuration;
 using GitHubExtractor.Configs;
 using GitHubExtractor.Dtos;
 using GitHubExtractor.Models;
+using GitHubExtractor.Services.Files;
 using GitHubExtractor.Services.Interfaces;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 
 namespace GitHubExtractor.Services
@@ -20,23 +18,24 @@ namespace GitHubExtractor.Services
 		public IGitHubIssuesRequestService GitHubIssuesRequestService { get; set; }
 
 		public IGitHubCommitRequestService GitHubCommitRequestService { get; set; }
+		public IFileCreator FileCreator { get; set; }
 
 		public static readonly Logger LOG = LogManager.GetCurrentClassLogger();
 
-		private readonly string DELIMETER = "\a";
+
 
 		private readonly string PULL_REQUEST_FILE_PATH_KEY = "PullRequestFilePathKey";
 		private readonly string COMMIT_FILE_PATH_KEY = "CommitFilePathKey";
 
 		private readonly int DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE = 10;
 
-		public GitHubService(IGitHubPullRequestService gitHubPullRequestService, IGitHubIssuesRequestService gitHubissuesRequestService, IGitHubCommitRequestService gitHubCommitRequestService)//, IFileCreator fileCreator)
+		public GitHubService(IGitHubPullRequestService gitHubPullRequestService, IGitHubIssuesRequestService gitHubissuesRequestService, IGitHubCommitRequestService gitHubCommitRequestService, IFileCreator fileCreator)
 		{
 
 			GitHubPullRequestService = gitHubPullRequestService;
 			GitHubIssuesRequestService = gitHubissuesRequestService;
 			GitHubCommitRequestService = gitHubCommitRequestService;
-			//FileCreator = fileCreator;
+			FileCreator = fileCreator;
 		}
 
 		public void CreateFiles()
@@ -137,9 +136,10 @@ namespace GitHubExtractor.Services
 					}
 				}
 
-
+				FileCreator.FilePath = filePath;
+				FileCreator.FileName = fileName;
 				LOG.Info("INIT - CREATING CSV");
-				CreateCsvFile<T, TClassMap>(data, filePath, fileName);
+				FileCreator.CreateFile<T, TClassMap>(data);
 				LOG.Info("END - CREATING CSV");
 			}
 			else
@@ -205,27 +205,6 @@ namespace GitHubExtractor.Services
 			data.Add(item);
 		}
 
-		private void CreateCsvFile<T, TClassMap>(IEnumerable<T> data, string filePath, string fileName) where TClassMap : ClassMap
-		{
-			Directory.CreateDirectory(filePath);
-
-			string completePath = filePath + fileName;
-			StreamWriter writer = new StreamWriter(completePath);
-
-			CsvConfiguration configuration = new CsvConfiguration(new CultureInfo("en-us"));
-
-			configuration.Delimiter = DELIMETER;
-			configuration.HasHeaderRecord = true;
-
-			CsvWriter csvWriter = new CsvWriter(writer, configuration);
-			csvWriter.Context.RegisterClassMap<TClassMap>();
-			SetupData(csvWriter, data);
-
-			LOG.Info("INIT - SAVING CSV TO PATH: {0} WITH NAME {1}", filePath, fileName);
-			writer.Flush();
-			LOG.Info("END - SAVING CSV TO PATH: {0} WITH NAME {1}", filePath, fileName);
-		}
-
 		private string GetFileName(string name)
 		{
 			string fileName = String.Format("{0:yyyy-MM-dd_HH-mm-ss}-{1}.csv", DateTime.Now, name);
@@ -237,11 +216,6 @@ namespace GitHubExtractor.Services
 			AppConfig appConfig = AppConfig.Instance;
 			string filePath = appConfig.GetConfig(key);
 			return filePath;
-		}
-
-		private void SetupData<T>(CsvWriter csvWriter, IEnumerable<T> data)
-		{
-			csvWriter.WriteRecords(data);
 		}
 	}
 }
