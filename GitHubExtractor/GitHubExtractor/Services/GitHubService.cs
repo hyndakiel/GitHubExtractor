@@ -22,12 +22,12 @@ namespace GitHubExtractor.Services
 
 		public static readonly Logger LOG = LogManager.GetCurrentClassLogger();
 
-
-
 		private readonly string PULL_REQUEST_FILE_PATH_KEY = "PullRequestFilePathKey";
 		private readonly string COMMIT_FILE_PATH_KEY = "CommitFilePathKey";
 
 		private readonly int DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE = 10;
+
+		private readonly IDictionary<string, Commit> CommitByShaDict = new Dictionary<string, Commit>();
 
 		public GitHubService(IGitHubPullRequestService gitHubPullRequestService, IGitHubIssuesRequestService gitHubissuesRequestService, IGitHubCommitRequestService gitHubCommitRequestService, IFileCreator fileCreator)
 		{
@@ -94,9 +94,16 @@ namespace GitHubExtractor.Services
 
 		private Commit GetCommitData(PullRequestResponse pullRequestResponse)
 		{
-			LOG.Info("INIT - GET COMMITS FROM PULL REQUEST {0}", pullRequestResponse.Number);
-			IGitHubCommitRequestService gitHubCommitRequestService = GitHubCommitRequestService;
-			Commit commit = gitHubCommitRequestService.GetCommits(pullRequestResponse.Head.Sha);
+			bool didGetValue = CommitByShaDict.TryGetValue(pullRequestResponse.Head.Sha, out Commit commit);
+			if (!didGetValue)
+			{
+				LOG.Info("INIT - GET COMMITS FROM PULL REQUEST {0}", pullRequestResponse.Number);
+				IGitHubCommitRequestService gitHubCommitRequestService = GitHubCommitRequestService;
+				commit = gitHubCommitRequestService.GetCommits(pullRequestResponse.Head.Sha);
+
+				CommitByShaDict.Add(pullRequestResponse.Head.Sha, commit);
+			}
+
 			LOG.Info("END - GET COMMITS PULL REQUEST {0}", pullRequestResponse.Number);
 
 			return commit;
