@@ -33,7 +33,7 @@ namespace GitHubExtractor.Services
 
 		private readonly IDictionary<string, Commit> CommitByShaDict = new Dictionary<string, Commit>();
 
-		private static readonly int SLEEP_TIME = 60 * 60;
+		private static readonly int SLEEP_TIME = 60 * 60 * 1000;
 
 		public GitHubService(IGitHubPullRequestService gitHubPullRequestService, IGitHubIssuesRequestService gitHubissuesRequestService, IGitHubCommitRequestService gitHubCommitRequestService, IFileCreator fileCreator)
 		{
@@ -245,7 +245,6 @@ namespace GitHubExtractor.Services
 			item.CommitAuthor = commit.CommitInfo?.Author?.Name;
 			item.CommitDate = commit.CommitInfo?.Author?.Date;
 			item.CommitMessage = commit.CommitInfo?.Message;
-			//item.IsPr = pullRequestResponse.
 
 			data.Add(item);
 		}
