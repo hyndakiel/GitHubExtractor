@@ -8,6 +8,8 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Threading;
 
 namespace GitHubExtractor.Services
 {
@@ -20,6 +22,8 @@ namespace GitHubExtractor.Services
 		public IGitHubCommitRequestService GitHubCommitRequestService { get; set; }
 		public IFileCreator FileCreator { get; set; }
 
+		public static readonly string GIT_HUB_EXCEEDED_RATE_LIMIT_MESSAGE = "rate limit exceeded";
+
 		public static readonly Logger LOG = LogManager.GetCurrentClassLogger();
 
 		private readonly string PULL_REQUEST_FILE_PATH_KEY = "PullRequestFilePathKey";
@@ -28,6 +32,8 @@ namespace GitHubExtractor.Services
 		private readonly int DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE = 10;
 
 		private readonly IDictionary<string, Commit> CommitByShaDict = new Dictionary<string, Commit>();
+
+		private static readonly int SLEEP_TIME = 60 * 60;
 
 		public GitHubService(IGitHubPullRequestService gitHubPullRequestService, IGitHubIssuesRequestService gitHubissuesRequestService, IGitHubCommitRequestService gitHubCommitRequestService, IFileCreator fileCreator)
 		{
@@ -128,19 +134,12 @@ namespace GitHubExtractor.Services
 
 				for (; count < runLimit; count++)
 				{
-					PullRequestResponse pullRequestResponse = pullRequests[count];
 					if (count == 0 || (count % logCoeficient == 0) || (count == pullRequestsCount - 1))
 					{
 						LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, pullRequestsCount);
 					}
-					try
-					{
-						action(data, pullRequestResponse);
-					}
-					catch (Exception e)
-					{
-						LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.Number, e);
-					}
+
+					GetData(pullRequests, action, count, data);
 				}
 
 				FileCreator.FilePath = filePath;
@@ -153,6 +152,58 @@ namespace GitHubExtractor.Services
 			{
 				LOG.Info("No pull requests available to get");
 			}
+		}
+
+		private void GetData<T>(IList<PullRequestResponse> pullRequests, Action<List<T>, PullRequestResponse> action, int count, List<T> data)
+		{
+			bool needToGetData = true;
+			while (needToGetData)
+			{
+				PullRequestResponse pullRequestResponse = pullRequests[count];
+
+				try
+				{
+					action(data, pullRequestResponse);
+					needToGetData = false;
+				}
+				catch (WebException webException)
+				{
+					if (typeof(WebException) == webException.InnerException.GetType())
+					{
+						TreatGitHubLimitRateError(pullRequestResponse, webException);
+					}
+					else
+					{
+						DefaultErrorBehavior(pullRequestResponse, webException);
+					}
+				}
+				catch (Exception e)
+				{
+					DefaultErrorBehavior(pullRequestResponse, e);
+				}
+			}
+		}
+
+		private void TreatGitHubLimitRateError(PullRequestResponse pullRequestResponse, WebException webException)
+		{
+			WebException innerException = (WebException)webException.InnerException;
+			HttpWebResponse response = (HttpWebResponse)innerException.Response;
+			HttpStatusCode statusCode = response.StatusCode;
+			string statusDescription = response.StatusDescription;
+			if (statusCode == HttpStatusCode.Forbidden && GIT_HUB_EXCEEDED_RATE_LIMIT_MESSAGE.Equals(statusDescription))
+			{
+				LOG.Error("Could not get data for pullRequest {0}, sleeping and trying again. Error: {1}", pullRequestResponse.Number, webException);
+				Thread.Sleep(SLEEP_TIME);
+			}
+			else
+			{
+				DefaultErrorBehavior(pullRequestResponse, webException);
+			}
+		}
+
+		private void DefaultErrorBehavior(PullRequestResponse pullRequestResponse, Exception e)
+		{
+			LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.Number, e);
 		}
 
 		private void GetPullRequestData(IGitHubPullRequestService gitHubPullRequestService, List<PullRequestCsvFileData> data, PullRequestResponse pullRequestResponse)

@@ -90,7 +90,7 @@ namespace GitHubExtractor.Services.Connection
 			catch (Exception e)
 			{
 				string msg = string.Format("Erro on accesss url='{0}' with json={1}", url, json);
-				throw new IOException(msg, e);
+				throw new WebException(msg, e);
 			}
 
 		}
