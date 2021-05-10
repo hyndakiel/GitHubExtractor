@@ -1,4 +1,5 @@
 ﻿using GitHubExtractor.Configs;
+using GitHubExtractor.Dtos;
 using GitHubExtractor.Utils;
 using NLog;
 using System;
@@ -20,11 +21,14 @@ namespace GitHubExtractor.Services.Connection
 
 		public string ApiUrl { get; set; }
 
+		public LastRequestInfo LastRequestInfo { get; set; }
+
 		protected AbstractConnectionService(string key) : base()
 		{
 			AppConfig appConfig = AppConfig.Instance;
 			string baseApiUrl = appConfig.GetConfig(key);
 			this.ApiUrl = baseApiUrl;
+			LastRequestInfo = new LastRequestInfo();
 		}
 
 		public string AccessEndPoint(string url)
@@ -140,6 +144,10 @@ namespace GitHubExtractor.Services.Connection
 			StreamReader reader = new StreamReader(stream, Encoding.UTF8);
 
 			string responseString = reader.ReadToEnd();
+
+			LastRequestInfo.Headers = webResponse.Headers;
+			LastRequestInfo.Response = responseString;
+
 			return responseString;
 		}
 
