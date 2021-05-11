@@ -186,18 +186,25 @@ namespace GitHubExtractor.Services
 
 		private void TreatGitHubLimitRateError(PullRequestResponse pullRequestResponse, WebException webException)
 		{
-			WebException innerException = (WebException)webException.InnerException;
-			HttpWebResponse response = (HttpWebResponse)innerException.Response;
-			HttpStatusCode statusCode = response.StatusCode;
-			string statusDescription = response.StatusDescription;
-			if (statusCode == HttpStatusCode.Forbidden && GIT_HUB_EXCEEDED_RATE_LIMIT_MESSAGE.Equals(statusDescription))
+			try
 			{
-				LOG.Error("Could not get data for pullRequest {0}, sleeping and trying again. Error: {1}", pullRequestResponse.Number, webException);
-				Thread.Sleep(SLEEP_TIME);
+				WebException innerException = (WebException)webException.InnerException;
+				HttpWebResponse response = (HttpWebResponse)innerException.Response;
+				HttpStatusCode statusCode = response.StatusCode;
+				string statusDescription = response.StatusDescription;
+				if (statusCode == HttpStatusCode.Forbidden && GIT_HUB_EXCEEDED_RATE_LIMIT_MESSAGE.Equals(statusDescription))
+				{
+					LOG.Error("Could not get data for pullRequest {0}, sleeping and trying again. Error: {1}", pullRequestResponse.Number, webException);
+					Thread.Sleep(SLEEP_TIME);
+				}
+				else
+				{
+					DefaultErrorBehavior(pullRequestResponse, webException);
+				}
 			}
-			else
+			catch (Exception e)
 			{
-				DefaultErrorBehavior(pullRequestResponse, webException);
+				LOG.Error("Unknown web exception. moving on. Error: {1}", pullRequestResponse.Number, e);
 			}
 		}
 
