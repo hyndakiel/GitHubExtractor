@@ -28,6 +28,7 @@ namespace GitHubExtractor.Services
 
 		private readonly string PULL_REQUEST_FILE_PATH_KEY = "PullRequestFilePathKey";
 		private readonly string COMMIT_FILE_PATH_KEY = "CommitFilePathKey";
+		private readonly string ISSUE_FILE_PATH_KEY = "IssueFilePathKey";
 
 		private readonly int DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE = 10;
 
@@ -55,6 +56,59 @@ namespace GitHubExtractor.Services
 
 			CreatePullRequestCSVFile(pullRequests);
 			CreateCommitsCSVFile(pullRequests);
+			CreateIssuesCSVFile();
+		}
+
+		public void CreateIssuesCSVFile()
+		{
+			IGitHubIssuesRequestService gitHubIssuesRequestService = GitHubIssuesRequestService;
+			IList<IssueResponse> issues = gitHubIssuesRequestService.List();
+
+			int issuesCount = issues.Count();
+
+			AppConfig instance = AppConfig.Instance;
+			bool debugMode = instance.GetConfigBool("DebbugMode");
+			int runLimit = (debugMode && DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE < issuesCount)
+				? DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE : issuesCount;
+
+			int count = 0;
+			const int logCoeficient = 10;
+
+			List<IssueFileCsvData> data = new List<IssueFileCsvData>();
+			if (issues.Any())
+			{
+				for (; count < runLimit; count++)
+				{
+					if (count == 0 || (count % logCoeficient == 0) || (count == issuesCount - 1))
+					{
+						LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, issuesCount);
+					}
+
+					foreach (IssueResponse issue in issues)
+					{
+						IEnumerable<IssueCommentResponse> comments = GetIssueComment(gitHubIssuesRequestService, issue);
+
+						IssueFileCsvData item = TransformIntoCsvFormat(issue, comments);
+						data.Add(item);
+					}
+				}
+
+				string filePathKey = ISSUE_FILE_PATH_KEY;
+				string filePath = GetFilePath(filePathKey);
+
+				const string name = "issues";
+				string fileName = GetFileName(name);
+
+				FileCreator.FilePath = filePath;
+				FileCreator.FileName = fileName;
+				LOG.Info("INIT - CREATING CSV");
+				FileCreator.CreateFile<IssueFileCsvData, IssueResponseMap>(data);
+				LOG.Info("END - CREATING CSV");
+			}
+			else
+			{
+				LOG.Info("No pull requests available to get");
+			}
 		}
 
 		public void CreatePullRequestCSVFile(IList<PullRequestResponse> pullRequests)
@@ -222,17 +276,28 @@ namespace GitHubExtractor.Services
 			IEnumerable<PullRequestComment> pullRequestComments = gitHubPullRequestService.Comments(pullRequestResponse.Number);
 			LOG.Info("END - GET COMMENTS FROM PULL REQUEST {0}", pullRequestResponse.Number);
 
-			LOG.Info("INIT - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
-			IssueResponse issue = gitHubIssuesRequestService.Get(pullRequestResponse.Number);
-			LOG.Info("END - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
-
-			LOG.Info("INIT - GET COMMENTS FROM ISSUE {0}", issue.Number);
-			IEnumerable<IssueCommentResponse> issueComments = gitHubIssuesRequestService.GetIssueComments(issue.Number);
-			LOG.Info("END - GET COMMENTS FROM ISSUE {0}", issue.Number);
+			IssueResponse issue = GetIssueResponse(pullRequestResponse, gitHubIssuesRequestService);
+			IEnumerable<IssueCommentResponse> issueComments = GetIssueComment(gitHubIssuesRequestService, issue);
 
 			Commit commit = GetCommitData(pullRequestResponse);
 
 			TransformIntoCsvFormat(pullRequestResponse, issue, pullRequestComments, issueComments, commit, data);
+		}
+
+		private static IEnumerable<IssueCommentResponse> GetIssueComment(IGitHubIssuesRequestService gitHubIssuesRequestService, IssueResponse issue)
+		{
+			LOG.Info("INIT - GET COMMENTS FROM ISSUE {0}", issue.Number);
+			IEnumerable<IssueCommentResponse> issueComments = gitHubIssuesRequestService.GetIssueComments(issue.Number);
+			LOG.Info("END - GET COMMENTS FROM ISSUE {0}", issue.Number);
+			return issueComments;
+		}
+
+		private IssueResponse GetIssueResponse(PullRequestResponse pullRequestResponse, IGitHubIssuesRequestService gitHubIssuesRequestService)
+		{
+			LOG.Info("INIT - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
+			IssueResponse issue = gitHubIssuesRequestService.Get(pullRequestResponse.Number);
+			LOG.Info("END - GET ISSUE FROM PULL REQUEST {0}", pullRequestResponse.Number);
+			return issue;
 		}
 
 		private void TransformIntoCsvFormat(PullRequestResponse pullRequestResponse, IssueResponse issue, IEnumerable<PullRequestComment> pullRequestComments, IEnumerable<IssueCommentResponse> issueComments, Commit commit, List<PullRequestCsvFileData> data)
@@ -243,7 +308,7 @@ namespace GitHubExtractor.Services
 			item.IssueAuthor = issue.Milestone?.Creator?.Login;
 			item.IssueTitle = issue.Title;
 			item.IssueBody = issue.Body;
-			item.IssueComments = item.CreateIssueCommentsField(issueComments);
+			item.IssueComments = IssueCommentResponse.CreateIssueCommentsField(issueComments);
 			item.PrCloseData = pullRequestResponse.CloseDate;
 			item.PrAuthor = pullRequestResponse.User?.Login;
 			item.PrTitle = pullRequestResponse.Title;
@@ -252,6 +317,7 @@ namespace GitHubExtractor.Services
 			item.CommitAuthor = commit.CommitInfo?.Author?.Name;
 			item.CommitDate = commit.CommitInfo?.Author?.Date;
 			item.CommitMessage = commit.CommitInfo?.Message;
+			item.IsPr = true;
 
 			data.Add(item);
 		}
@@ -267,6 +333,19 @@ namespace GitHubExtractor.Services
 			item.PrepareChangesInfo(commit);
 
 			data.Add(item);
+		}
+
+		private IssueFileCsvData TransformIntoCsvFormat(IssueResponse issue, IEnumerable<IssueCommentResponse> comments)
+		{
+			IssueFileCsvData item = new IssueFileCsvData();
+			item.IssueNumber = issue.Number;
+			item.IssueClosedDate = issue.ClosedAt;
+			item.IssueTitle = issue.Title;
+			item.IssueAuthor = issue.Milestone?.Creator?.Login;
+			item.IssueBody = issue.Body;
+			item.IssueComments = IssueCommentResponse.CreateIssueCommentsField(comments);
+
+			return item;
 		}
 
 		private string GetFileName(string name)

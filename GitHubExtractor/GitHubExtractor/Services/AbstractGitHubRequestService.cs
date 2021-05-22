@@ -1,5 +1,9 @@
 ﻿using GitHubExtractor.Dtos;
+using GitHubExtractor.Dtos.Interfaces;
 using GitHubExtractor.Services.Connection;
+using GitHubExtractor.Utils;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace GitHubExtractor.Services
 {
@@ -18,21 +22,73 @@ namespace GitHubExtractor.Services
 			GitHubApiConnectionService = gitHubApiConnectionService;
 		}
 
-		protected string GetNumberAfterStringFromUrl(string url, string stringToFind, bool isMiddleOfString = false)
+		private void ExtractLastPageInfo(string linkHeader, ref int lastPage)
 		{
-			int indexOfIssuesKeyWord = url.IndexOf(stringToFind);
-			string afterIssuesKeyword = url.Substring(indexOfIssuesKeyWord);
-
-			int actionDividerIndex = afterIssuesKeyword.IndexOf("/");
-			string dataAsString = afterIssuesKeyword.Substring(actionDividerIndex + 1);
-
-			if (isMiddleOfString)
+			string[] links = linkHeader.Split(",");
+			foreach (string link in links)
 			{
-				int actionDividerIndexEnd = dataAsString.IndexOf("/");
-				dataAsString = dataAsString.Substring(0, actionDividerIndexEnd);
+				if (link.Contains("last"))
+				{
+					int pageIndex = link.IndexOf("&page=");
+					int stopCharIndexIndex = link.IndexOf(">");
+					int diffIndex = stopCharIndexIndex - pageIndex;
+
+					string lastPageStr = link.Substring(pageIndex, diffIndex);
+
+					string lastPageNumberAsStr = Regex.Match(lastPageStr, @"\d+").Value;
+
+					int page = int.Parse(lastPageNumberAsStr);
+
+					lastPage = page;
+					break;
+				}
+			}
+		}
+
+		private bool IsLastPage(int lastPage, int page)
+		{
+			bool ret = false;
+			if (lastPage == page)
+			{
+				ret = true;
 			}
 
-			return dataAsString;
+			return ret;
+		}
+
+		protected List<T> GetPaginatedData<T>(IApiListParamns paramns, string url)
+		{
+			bool isGettingPages = true;
+			int lastPage = 0;
+
+			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
+
+			List<T> data = new List<T>();
+			while (isGettingPages)
+			{
+				int page = paramns.Page;
+
+				string response = gitHubApiConnectionService.AccessEndPoint(url, paramns, false, BasicAuth, "GitHub");
+				List<T> partialData = UtilitiesObj.JsonDeserializeObject<List<T>>(response);
+
+				LastRequestInfo lastRequestInfo = gitHubApiConnectionService.LastRequestInfo;
+				string linkHeader = lastRequestInfo.Headers["Link"];
+				if (lastPage == 0)
+				{
+					ExtractLastPageInfo(linkHeader, ref lastPage);
+				}
+
+				if (IsLastPage(lastPage, page))
+				{
+					isGettingPages = false;
+				}
+
+				paramns.Page += 1;
+
+				data.AddRange(partialData);
+			}
+
+			return data;
 		}
 	}
 }

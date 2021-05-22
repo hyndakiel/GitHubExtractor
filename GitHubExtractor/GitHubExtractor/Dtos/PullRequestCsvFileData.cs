@@ -7,6 +7,7 @@ namespace GitHubExtractor.Dtos
 {
 	public class PullRequestCsvFileData
 	{
+		public bool IsPr { get; set; }
 		public int PrNumber { get; internal set; }
 		public DateTime? IssueClosedDate { get; internal set; }
 		public string IssueAuthor { get; internal set; }
@@ -21,20 +22,6 @@ namespace GitHubExtractor.Dtos
 		public string CommitAuthor { get; internal set; }
 		public DateTime? CommitDate { get; internal set; }
 		public string CommitMessage { get; internal set; }
-
-		public string CreateIssueCommentsField(IEnumerable<IssueCommentResponse> issueComments)
-		{
-			StringBuilder builder = new StringBuilder();
-
-			builder.Append(" =||= ");
-			foreach (IssueCommentResponse comment in issueComments)
-			{
-				builder.Append(comment.Body);
-				builder.Append(" =||= ");
-			}
-
-			return builder.ToString();
-		}
 
 		public string CreatePullRequestCommentsField(IEnumerable<PullRequestComment> pullRequestComments)
 		{

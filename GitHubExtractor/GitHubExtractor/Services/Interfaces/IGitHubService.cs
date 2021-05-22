@@ -8,6 +8,7 @@ namespace GitHubExtractor.Services.Interfaces
 		public IGitHubPullRequestService GitHubPullRequestService { get; set; }
 		void CreatePullRequestCSVFile(IList<PullRequestResponse> pullRequests);
 		void CreateCommitsCSVFile(IList<PullRequestResponse> pullRequests);
+		void CreateIssuesCSVFile();
 		void CreateFiles();
 	}
 }

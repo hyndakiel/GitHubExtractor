@@ -23,7 +23,7 @@ namespace GitHubExtractor.Dtos
 			Map(m => m.CommitAuthor).Name("Commit_Author");
 			Map(m => m.CommitDate).Name("Commit_Date");
 			Map(m => m.CommitMessage).Name("Commit_Message");
-			//Map(m => m.).Name("isPR");
+			Map(m => m.IsPr).Name("isPR");
 		}
 	}
 }

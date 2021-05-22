@@ -8,5 +8,7 @@ namespace GitHubExtractor.Services.Interfaces
 		public IssueResponse Get(int number);
 
 		public IEnumerable<IssueCommentResponse> GetIssueComments(int issueNumber);
+
+		public IList<IssueResponse> List();
 	}
 }

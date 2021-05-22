@@ -40,5 +40,21 @@ namespace GitHubExtractor.Services
 
 			return issueComments;
 		}
+
+		public IList<IssueResponse> List()
+		{
+			string url = string.Format("/repos/{0}/{1}/issues", GitRepoUserName, GitProject);
+
+			IssuesRequestParamns issuesRequestParamns = new IssuesRequestParamns();
+			issuesRequestParamns.Sort = "created";
+			issuesRequestParamns.State = "closed";
+			const int maxPerPageAllowed = 100;
+			issuesRequestParamns.PerPage = maxPerPageAllowed;
+			issuesRequestParamns.Page = 1;
+
+			List<IssueResponse> issues = GetPaginatedData<IssueResponse>(issuesRequestParamns, url);
+
+			return issues;
+		}
 	}
 }

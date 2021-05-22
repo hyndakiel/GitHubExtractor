@@ -2,13 +2,11 @@
 
 namespace GitHubExtractor.Dtos
 {
-	public class PullRequestParamns : IApiListParamns
+	class IssuesRequestParamns : IApiListParamns
 	{
-		public PullRequestParamns()
-		{
-		}
+		public IssuesRequestParamns() { }
 
-		public PullRequestParamns(string state, string sort)
+		public IssuesRequestParamns(string state, string sort)
 		{
 			State = state;
 			Sort = sort;
