@@ -31,12 +31,12 @@ namespace GitHubExtractor.Services
 		{
 			string urlToUse = string.Format("/repos/{0}/{1}/issues/{2}/comments", GitRepoUserName, GitProject, issueNumber);
 
-			BasicAuth basicAuth = BasicAuth;
+			IssueCommentsRequestParamns issuesRequestParamns = new IssueCommentsRequestParamns();
+			const int maxPerPageAllowed = 100;
+			issuesRequestParamns.PerPage = maxPerPageAllowed;
+			issuesRequestParamns.Page = 1;
 
-			GitHubApiConnectionService gitHubApiConnectionService = GitHubApiConnectionService;
-			string response = gitHubApiConnectionService.AccessEndPoint(urlToUse, null, false, basicAuth, "GitHub");
-
-			IEnumerable<IssueCommentResponse> issueComments = UtilitiesObj.JsonDeserializeObject<IEnumerable<IssueCommentResponse>>(response);
+			List<IssueCommentResponse> issueComments = GetPaginatedData<IssueCommentResponse>(issuesRequestParamns, urlToUse);
 
 			return issueComments;
 		}

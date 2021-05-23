@@ -48,7 +48,7 @@ namespace GitHubExtractor.Services
 		private bool IsLastPage(int lastPage, int page)
 		{
 			bool ret = false;
-			if (lastPage == page)
+			if (lastPage <= page)
 			{
 				ret = true;
 			}
@@ -56,7 +56,7 @@ namespace GitHubExtractor.Services
 			return ret;
 		}
 
-		protected List<T> GetPaginatedData<T>(IApiListParamns paramns, string url)
+		protected List<T> GetPaginatedData<T>(IPaginatedParamns paramns, string url)
 		{
 			bool isGettingPages = true;
 			int lastPage = 0;
@@ -73,7 +73,7 @@ namespace GitHubExtractor.Services
 
 				LastRequestInfo lastRequestInfo = gitHubApiConnectionService.LastRequestInfo;
 				string linkHeader = lastRequestInfo.Headers["Link"];
-				if (lastPage == 0)
+				if (lastPage == 0 && !string.IsNullOrEmpty(linkHeader))
 				{
 					ExtractLastPageInfo(linkHeader, ref lastPage);
 				}
