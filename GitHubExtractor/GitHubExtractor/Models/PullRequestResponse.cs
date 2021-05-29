@@ -44,5 +44,7 @@ namespace GitHubExtractor.Models
 		public Head Head { get; internal set; }
 
 		public int LogNumber => Number;
+
+		public string LogName => "PullRequest";
 	}
 }

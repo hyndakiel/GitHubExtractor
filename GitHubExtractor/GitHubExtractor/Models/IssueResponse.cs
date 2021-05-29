@@ -28,5 +28,7 @@ namespace GitHubExtractor.Models
 		public int Number { get; set; }
 
 		public int LogNumber => Number;
+
+		public string LogName => "Issues";
 	}
 }

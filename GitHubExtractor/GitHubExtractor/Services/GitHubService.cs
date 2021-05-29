@@ -48,19 +48,38 @@ namespace GitHubExtractor.Services
 
 		public void CreateFiles()
 		{
-			LOG.Info("INIT - GET PULL REQUESTS");
-			IGitHubPullRequestService gitHubPullRequestService = GitHubPullRequestService;
-			IList<PullRequestResponse> pullRequests = gitHubPullRequestService.List();
+			bool needToGetData = true;
 
-			int pullRequestsCount = pullRequests.Count();
-			LOG.Info("END - GET PULL REQUESTS - RESULT {0} PULL REQUESTS", pullRequestsCount);
+			List<PullRequestResponse> pullRequests = new List<PullRequestResponse>();
+			List<IssueResponse> issues = new List<IssueResponse>();
+			while (needToGetData)
+			{
+				try
+				{
+					LOG.Info("INIT - GET PULL REQUESTS");
+					IGitHubPullRequestService gitHubPullRequestService = GitHubPullRequestService;
+					IList<PullRequestResponse> pullRequestsLocal = gitHubPullRequestService.List();
+					pullRequests.AddRange(pullRequestsLocal);
 
-			LOG.Info("INIT - GET ISSUES");
-			IGitHubIssuesRequestService gitHubIssuesRequestService = GitHubIssuesRequestService;
-			IList<IssueResponse> issues = gitHubIssuesRequestService.List();
+					int pullRequestsCount = pullRequests.Count;
+					LOG.Info("END - GET PULL REQUESTS - RESULT {0} PULL REQUESTS", pullRequestsCount);
 
-			int issuesCount = issues.Count();
-			LOG.Info("END - GET ISSUES - RESULT {0} ISSUES", issuesCount);
+					LOG.Info("INIT - GET ISSUES");
+					IGitHubIssuesRequestService gitHubIssuesRequestService = GitHubIssuesRequestService;
+					IList<IssueResponse> issuesResponseLocal = gitHubIssuesRequestService.List();
+					issues.AddRange(issuesResponseLocal);
+
+					int issuesCount = issues.Count;
+					LOG.Info("END - GET ISSUES - RESULT {0} ISSUES", issuesCount);
+					needToGetData = false;
+				}
+				catch (Exception e)
+				{
+					LOG.Error("Error getting essential data: {0} {1}", e.Message, e.StackTrace);
+					pullRequests.Clear();
+					issues.Clear();
+				}
+			}
 
 			CreatePullRequestCSVFile(pullRequests);
 			CreateCommitsCSVFile(pullRequests);
@@ -233,7 +252,7 @@ namespace GitHubExtractor.Services
 				string statusDescription = response.StatusDescription;
 				if (statusCode == HttpStatusCode.Forbidden && GIT_HUB_EXCEEDED_RATE_LIMIT_MESSAGE.Equals(statusDescription))
 				{
-					LOG.Error("Could not get data for pullRequest {0}, sleeping and trying again. Error: {1}", pullRequestResponse.LogNumber, webException);
+					LOG.Error("Could not get data for {0} {1}, sleeping and trying again. Error: {2}", pullRequestResponse.LogName, pullRequestResponse.LogNumber, webException);
 					Thread.Sleep(SLEEP_TIME);
 				}
 				else
@@ -249,7 +268,7 @@ namespace GitHubExtractor.Services
 
 		private void DefaultErrorBehavior<K>(K pullRequestResponse, Exception e) where K : ILogNumber
 		{
-			LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.LogNumber, e);
+			LOG.Error("Could not get data for {0} {1}, moving on. Error: {2}", pullRequestResponse.LogName, pullRequestResponse.LogNumber, e);
 		}
 
 		private void GetPullRequestData(IGitHubPullRequestService gitHubPullRequestService, List<PullRequestCsvFileData> data, PullRequestResponse pullRequestResponse)
