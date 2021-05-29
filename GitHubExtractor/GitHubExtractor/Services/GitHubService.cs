@@ -1,6 +1,7 @@
 ﻿using CsvHelper.Configuration;
 using GitHubExtractor.Configs;
 using GitHubExtractor.Dtos;
+using GitHubExtractor.Dtos.Interfaces;
 using GitHubExtractor.Models;
 using GitHubExtractor.Services.Files;
 using GitHubExtractor.Services.Interfaces;
@@ -54,61 +55,43 @@ namespace GitHubExtractor.Services
 			int pullRequestsCount = pullRequests.Count();
 			LOG.Info("END - GET PULL REQUESTS - RESULT {0} PULL REQUESTS", pullRequestsCount);
 
-			CreatePullRequestCSVFile(pullRequests);
-			CreateCommitsCSVFile(pullRequests);
-			CreateIssuesCSVFile();
-		}
-
-		public void CreateIssuesCSVFile()
-		{
+			LOG.Info("INIT - GET ISSUES");
 			IGitHubIssuesRequestService gitHubIssuesRequestService = GitHubIssuesRequestService;
 			IList<IssueResponse> issues = gitHubIssuesRequestService.List();
 
 			int issuesCount = issues.Count();
+			LOG.Info("END - GET ISSUES - RESULT {0} ISSUES", issuesCount);
 
-			AppConfig instance = AppConfig.Instance;
-			bool debugMode = instance.GetConfigBool("DebbugMode");
-			int runLimit = (debugMode && DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE < issuesCount)
-				? DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE : issuesCount;
+			CreatePullRequestCSVFile(pullRequests);
+			CreateCommitsCSVFile(pullRequests);
+			CreateIssuesCSVFile(issues);
+		}
 
-			int count = 0;
-			const int logCoeficient = 10;
-
-			List<IssueFileCsvData> data = new List<IssueFileCsvData>();
-			if (issues.Any())
+		public void CreateIssuesCSVFile(IList<IssueResponse> issues)
+		{
+			Action<List<IssueFileCsvData>, IssueResponse> action = (data, issue) =>
 			{
-				for (; count < runLimit; count++)
-				{
-					if (count == 0 || (count % logCoeficient == 0) || (count == issuesCount - 1))
-					{
-						LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, issuesCount);
-					}
+				IGitHubIssuesRequestService gitHubIssuesRequestService = GitHubIssuesRequestService;
 
-					foreach (IssueResponse issue in issues)
-					{
-						IEnumerable<IssueCommentResponse> comments = GetIssueComment(gitHubIssuesRequestService, issue);
+				GetIssuesData(gitHubIssuesRequestService, issue, data);
+			};
 
-						IssueFileCsvData item = TransformIntoCsvFormat(issue, comments);
-						data.Add(item);
-					}
-				}
+			string filePathKey = ISSUE_FILE_PATH_KEY;
+			string filePath = GetFilePath(filePathKey);
 
-				string filePathKey = ISSUE_FILE_PATH_KEY;
-				string filePath = GetFilePath(filePathKey);
+			const string name = "issues";
+			string fileName = GetFileName(name);
 
-				const string name = "issues";
-				string fileName = GetFileName(name);
+			GetData<IssueFileCsvData, IssueResponseMap, IssueResponse>(issues, action, filePath, fileName);
+		}
 
-				FileCreator.FilePath = filePath;
-				FileCreator.FileName = fileName;
-				LOG.Info("INIT - CREATING CSV");
-				FileCreator.CreateFile<IssueFileCsvData, IssueResponseMap>(data);
-				LOG.Info("END - CREATING CSV");
-			}
-			else
-			{
-				LOG.Info("No pull requests available to get");
-			}
+		private void GetIssuesData(IGitHubIssuesRequestService gitHubIssuesRequestService, IssueResponse issue, List<IssueFileCsvData> data)
+		{
+
+			IEnumerable<IssueCommentResponse> comments = GetIssueComment(gitHubIssuesRequestService, issue);
+
+			IssueFileCsvData item = TransformIntoCsvFormat(issue, comments);
+			data.Add(item);
 		}
 
 		public void CreatePullRequestCSVFile(IList<PullRequestResponse> pullRequests)
@@ -126,7 +109,7 @@ namespace GitHubExtractor.Services
 			const string name = "pull-request";
 			string fileName = GetFileName(name);
 
-			GetPullRequestsData<PullRequestCsvFileData, PullRequestCsvFileDataMap>(pullRequests, action, filePath, fileName);
+			GetData<PullRequestCsvFileData, PullRequestCsvFileDataMap, PullRequestResponse>(pullRequests, action, filePath, fileName);
 		}
 
 		public void CreateCommitsCSVFile(IList<PullRequestResponse> pullRequests)
@@ -142,7 +125,7 @@ namespace GitHubExtractor.Services
 			const string name = "commit";
 			string fileName = GetFileName(name);
 
-			GetPullRequestsData<CommitCsvFileData, CommitCsvFileDataMap>(pullRequests, action, filePath, fileName);
+			GetData<CommitCsvFileData, CommitCsvFileDataMap, PullRequestResponse>(pullRequests, action, filePath, fileName);
 		}
 
 		private void GetCommitsData(List<CommitCsvFileData> data, PullRequestResponse pullRequestResponse)
@@ -169,31 +152,33 @@ namespace GitHubExtractor.Services
 			return commit;
 		}
 
-		private void GetPullRequestsData<T, TClassMap>(IList<PullRequestResponse> pullRequests, Action<List<T>, PullRequestResponse> action, string filePath, string fileName) where TClassMap : ClassMap
+		private void GetData<T, TClassMap, K>(IList<K> dataItem, Action<List<T>, K> action, string filePath, string fileName)
+			where TClassMap : ClassMap
+			where K : ILogNumber
 		{
-			int pullRequestsCount = pullRequests.Count();
+			int dataCount = dataItem.Count();
 
 			AppConfig instance = AppConfig.Instance;
 			bool debugMode = instance.GetConfigBool("DebbugMode");
-			int runLimit = (debugMode && DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE < pullRequestsCount)
-				? DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE : pullRequestsCount;
+			int runLimit = (debugMode && DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE < dataCount)
+				? DEBUG_MODE_PULL_REQUEST_MAX_RUN_VALUE : dataCount;
 
 			int count = 0;
 			const int logCoeficient = 10;
 
-			if (pullRequests.Any())
+			if (dataItem.Any())
 			{
 				List<T> data = new List<T>();
 
 
 				for (; count < runLimit; count++)
 				{
-					if (count == 0 || (count % logCoeficient == 0) || (count == pullRequestsCount - 1))
+					if (count == 0 || (count % logCoeficient == 0) || (count == dataCount - 1))
 					{
-						LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, pullRequestsCount);
+						LOG.Info("GETTING DATA FROM REQUEST {0} OF {1}", count, dataCount);
 					}
 
-					GetData(pullRequests, action, count, data);
+					GetData(dataItem, action, count, data);
 				}
 
 				FileCreator.FilePath = filePath;
@@ -208,37 +193,37 @@ namespace GitHubExtractor.Services
 			}
 		}
 
-		private void GetData<T>(IList<PullRequestResponse> pullRequests, Action<List<T>, PullRequestResponse> action, int count, List<T> data)
+		private void GetData<T, K>(IList<K> dataList, Action<List<T>, K> action, int count, List<T> data) where K : ILogNumber
 		{
 			bool needToGetData = true;
 			while (needToGetData)
 			{
-				PullRequestResponse pullRequestResponse = pullRequests[count];
+				K dataItem = dataList[count];
 
 				try
 				{
-					action(data, pullRequestResponse);
+					action(data, dataItem);
 					needToGetData = false;
 				}
 				catch (WebException webException)
 				{
 					if (typeof(WebException) == webException.InnerException.GetType())
 					{
-						TreatGitHubLimitRateError(pullRequestResponse, webException);
+						TreatGitHubLimitRateError(dataItem, webException);
 					}
 					else
 					{
-						DefaultErrorBehavior(pullRequestResponse, webException);
+						DefaultErrorBehavior(dataItem, webException);
 					}
 				}
 				catch (Exception e)
 				{
-					DefaultErrorBehavior(pullRequestResponse, e);
+					DefaultErrorBehavior(dataItem, e);
 				}
 			}
 		}
 
-		private void TreatGitHubLimitRateError(PullRequestResponse pullRequestResponse, WebException webException)
+		private void TreatGitHubLimitRateError<K>(K pullRequestResponse, WebException webException) where K : ILogNumber
 		{
 			try
 			{
@@ -248,7 +233,7 @@ namespace GitHubExtractor.Services
 				string statusDescription = response.StatusDescription;
 				if (statusCode == HttpStatusCode.Forbidden && GIT_HUB_EXCEEDED_RATE_LIMIT_MESSAGE.Equals(statusDescription))
 				{
-					LOG.Error("Could not get data for pullRequest {0}, sleeping and trying again. Error: {1}", pullRequestResponse.Number, webException);
+					LOG.Error("Could not get data for pullRequest {0}, sleeping and trying again. Error: {1}", pullRequestResponse.LogNumber, webException);
 					Thread.Sleep(SLEEP_TIME);
 				}
 				else
@@ -258,13 +243,13 @@ namespace GitHubExtractor.Services
 			}
 			catch (Exception e)
 			{
-				LOG.Error("Unknown web exception. moving on. Error: {1}", pullRequestResponse.Number, e);
+				LOG.Error("Unknown web exception. moving on. Error: {1}", pullRequestResponse.LogNumber, e);
 			}
 		}
 
-		private void DefaultErrorBehavior(PullRequestResponse pullRequestResponse, Exception e)
+		private void DefaultErrorBehavior<K>(K pullRequestResponse, Exception e) where K : ILogNumber
 		{
-			LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.Number, e);
+			LOG.Error("Could not get data for pullRequest {0}, moving on. Error: {1}", pullRequestResponse.LogNumber, e);
 		}
 
 		private void GetPullRequestData(IGitHubPullRequestService gitHubPullRequestService, List<PullRequestCsvFileData> data, PullRequestResponse pullRequestResponse)

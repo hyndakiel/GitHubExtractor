@@ -1,9 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using GitHubExtractor.Dtos.Interfaces;
+using Newtonsoft.Json;
 using System;
 
 namespace GitHubExtractor.Models
 {
-	public class IssueResponse
+	public class IssueResponse : ILogNumber
 	{
 		[JsonProperty("closed_at")]
 		public DateTime? ClosedAt { get; set; }
@@ -25,5 +26,7 @@ namespace GitHubExtractor.Models
 
 		[JsonProperty("number")]
 		public int Number { get; set; }
+
+		public int LogNumber => Number;
 	}
 }

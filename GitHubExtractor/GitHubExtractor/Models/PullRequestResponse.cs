@@ -1,9 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using GitHubExtractor.Dtos.Interfaces;
+using Newtonsoft.Json;
 using System;
 
 namespace GitHubExtractor.Models
 {
-	public class PullRequestResponse
+	public class PullRequestResponse : ILogNumber
 	{
 
 		[JsonProperty("url")]
@@ -41,5 +42,7 @@ namespace GitHubExtractor.Models
 
 		[JsonProperty("head")]
 		public Head Head { get; internal set; }
+
+		public int LogNumber => Number;
 	}
 }
