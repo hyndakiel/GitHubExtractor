@@ -15,15 +15,14 @@ namespace GitHubExtractor
 
 		protected Program() { }
 
-		static void Main(string[] args)
+		static void Main()
 		{
 			InitializeApp();
 			LOG.Info("INIT");
 			try
 			{
 				var config = AppConfig.Instance;
-				config.GetConfig("gitHubToken");
-				string gitRequestToken = args[0];
+				string gitRequestToken = config.GetConfig("gitHubToken");
 
 				BasicAuth basicAuth = new BasicAuth(gitRequestToken);
 
