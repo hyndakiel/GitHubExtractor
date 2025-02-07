@@ -1,4 +1,5 @@
-﻿using GitHubExtractor.Dtos;
+﻿using GitHubExtractor.Configs;
+using GitHubExtractor.Dtos;
 using GitHubExtractor.Services;
 using GitHubExtractor.Services.Connection;
 using GitHubExtractor.Services.Files;
@@ -20,6 +21,8 @@ namespace GitHubExtractor
 			LOG.Info("INIT");
 			try
 			{
+				var config = AppConfig.Instance;
+				config.GetConfig("gitHubToken");
 				string gitRequestToken = args[0];
 
 				BasicAuth basicAuth = new BasicAuth(gitRequestToken);
