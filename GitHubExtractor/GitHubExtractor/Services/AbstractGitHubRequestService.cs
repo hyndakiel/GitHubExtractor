@@ -47,13 +47,7 @@ namespace GitHubExtractor.Services
 
 		private bool IsLastPage(int lastPage, int page)
 		{
-			bool ret = false;
-			if (lastPage <= page)
-			{
-				ret = true;
-			}
-
-			return ret;
+			return lastPage <= page;
 		}
 
 		protected List<T> GetPaginatedData<T>(IPaginatedParamns paramns, string url)
