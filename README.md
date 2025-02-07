@@ -1,4 +1,4 @@
-# GitHuBExtractor
+# Git HuB Extractor
 
 This small program is intended solely for academic purposes, specifically for researching open-source projects by extracting Pull Requests, Issues, and Comments from a GitHub project.
 
